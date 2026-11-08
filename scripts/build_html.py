@@ -14,10 +14,8 @@ cfg = json.loads((course / "course.json").read_text())
 files = sorted((course / "lectures").glob("L*.md"))
 missing = []
 
-CSS = """
-:root{--bg:#fff;--fg:#1f1e1d;--mute:#6b6a68;--line:#ebe9e4;--line2:#dcdad5;--soft:#f7f6f3;--card:#fafaf9;--seg:#f4f4f3;--surface:#fff;--acc:#c96442;--on-fg:#fff;--hover:rgba(0,0,0,.04);--hover2:rgba(0,0,0,.06);--bar:rgba(255,255,255,.92);--ok:#2f8f5b;--ok-bg:#eef8f2;--bad:#c0392b;--bad-bg:#fbeeed;--shadow:rgba(0,0,0,.12);color-scheme:light}
-:root[data-theme=dark]{--bg:#2b2b2a;--fg:#d9d7d1;--mute:#a09e98;--line:#3b3b39;--line2:#4a4a47;--soft:#323231;--card:#313130;--seg:#363634;--surface:#353533;--acc:#d48b6e;--on-fg:#2b2b2a;--hover:rgba(255,255,255,.05);--hover2:rgba(255,255,255,.08);--bar:rgba(43,43,42,.9);--ok:#7fbf98;--ok-bg:#33433a;--bad:#d98476;--bad-bg:#4a3633;--shadow:rgba(0,0,0,.3);color-scheme:dark}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#2b2b2a;--fg:#d9d7d1;--mute:#a09e98;--line:#3b3b39;--line2:#4a4a47;--soft:#323231;--card:#313130;--seg:#363634;--surface:#353533;--acc:#d48b6e;--on-fg:#2b2b2a;--hover:rgba(255,255,255,.05);--hover2:rgba(255,255,255,.08);--bar:rgba(43,43,42,.9);--ok:#7fbf98;--ok-bg:#33433a;--bad:#d98476;--bad-bg:#4a3633;--shadow:rgba(0,0,0,.3);color-scheme:dark}}
+THEME = (Path(__file__).resolve().parent / "theme.css").read_text()
+CSS = THEME + """
 figure img,p img{background:#fff}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Anthropic Sans","Styrene B","Söhne",Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}

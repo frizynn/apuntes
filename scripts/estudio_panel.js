@@ -2,11 +2,14 @@
 (() => {
   const E = window.ESTUDIO;
   if (!E) return;
+  const HOME = !!E.home; // mounted inline on the workspace home instead of as the guide's sidebar
   const css = `
   #ep{position:fixed;z-index:7;top:48px;left:0;bottom:0;width:380px;background:var(--bg);display:flex;flex-direction:column;font-size:14px;line-height:20px;box-shadow:1px 0 0 var(--line);transform:translateX(-100%);visibility:hidden;transition:transform .16s cubic-bezier(.2,0,0,1),visibility 0s .16s}
   body.ep-on #ep{transform:none;visibility:visible;transition:transform .16s cubic-bezier(.2,0,0,1)}
   @media (min-width:1180px){body.ep-on main{margin-left:max(404px,calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - 404px - 310px))}body.ep-on.toc-off main{max-width:min(740px,calc(100vw - 428px))}body.ep-on #exam{margin-left:max(404px,calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - 428px))}}
   @media (max-width:1179px){#ep{width:100%}}
+  #ep.inline{position:relative;top:auto;left:auto;bottom:auto;width:100%;height:100%;transform:none;visibility:visible;box-shadow:none;background:transparent;transition:none}
+  #ep.inline .hd,#ep.inline .ctx{display:none}#ep.inline .msgs{padding:24px 4px}#ep.inline form{margin:0 0 16px}
   #ep .hd{display:flex;align-items:center;gap:6px;padding:10px 12px 6px}
   #ep .seg{position:relative;display:flex;padding:2px;border-radius:10px;background:var(--seg)}
   #ep .seg button{position:relative;z-index:1;height:28px;padding:0 12px;border:0;background:none;border-radius:8px;font:inherit;font-size:13px;color:var(--mute);cursor:pointer}
@@ -96,8 +99,14 @@
   toggle.className = 'b'; toggle.title = 'Chat'; toggle.setAttribute('aria-label', 'Chat');
   toggle.innerHTML = icon('<rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M6 2.5v11"/>') + '<span>Chat</span>';
   const askSel = Object.assign(document.createElement('button'), { id: 'ep-ask', textContent: 'Ask about this' });
-  document.body.append(ep, askSel);
-  (document.getElementById('barl') || document.querySelector('nav.bar')).append(toggle);
+  if (HOME) { ep.classList.add('inline'); document.getElementById('home-chat').append(ep); }
+  else {
+    document.body.append(ep, askSel);
+    const home = Object.assign(document.createElement('a'), { className: 'b', href: '/', title: 'Workspaces' });
+    home.setAttribute('aria-label', 'Workspaces');
+    home.innerHTML = icon('<path d="M2.5 7 8 2.5 13.5 7M4 6v7.5h8V6"/>');
+    (document.getElementById('barl') || document.querySelector('nav.bar')).append(home, toggle);
+  }
   const $ = (s) => ep.querySelector(s);
 
   const store = {
@@ -105,9 +114,9 @@
     set(k, v) { try { localStorage.setItem('ep:' + k, JSON.stringify(v)); } catch { /* storage blocked */ } },
   };
   const course = location.pathname;
-  const hist = { ask: store.get(course + ':ask', []), tutor: store.get(course + ':tutor', []), edit: store.get(course + ':edit', []) };
+  const hist = { ask: store.get(course + ':ask', []), tutor: store.get(course + ':tutor', []), edit: store.get(course + ':edit', []), home: store.get(course + ':home', []) };
   const save = () => { for (const k in hist) store.set(course + ':' + k, hist[k].slice(-60)); };
-  let mode = store.get('mode', 'ask'), selection = '', busy = null;
+  let mode = HOME ? 'home' : store.get('mode', 'ask'), selection = '', busy = null;
   const CHOICES = {
     model: [['haiku', 'Haiku', 'fastest'], ['sonnet', 'Sonnet', 'balanced'], ['opus', 'Opus', 'deepest']],
     effort: [['low', 'Low', 'quick'], ['medium', 'Medium', 'default'], ['high', 'High', 'thinks more'], ['xhigh', 'Extra high', 'slowest']],
@@ -141,14 +150,16 @@
     if (innerWidth >= 1180) store.set('open', v);
     if (v) requestAnimationFrame(pill);
   };
-  open(innerWidth >= 1180 && store.get('open', true));
+  if (!HOME) open(innerWidth >= 1180 && store.get('open', true));
   toggle.onclick = () => open(!document.body.classList.contains('ep-on'));
 
   function pill() {
     const on = $('.seg button.on'), i = $('.seg i');
+    if (!on) return;
     i.style.width = on.offsetWidth + 'px'; i.style.transform = `translateX(${on.offsetLeft}px)`;
   }
   function currentLec() {
+    if (HOME) return null;
     let cur = null;
     for (const s of document.querySelectorAll('section.lec[id^="l"]')) if (s.getBoundingClientRect().top < innerHeight * 0.4) cur = s;
     return cur;
@@ -158,9 +169,9 @@
 
   const box = $('.msgs');
   function setMode(m) {
-    mode = m; store.set('mode', m);
+    mode = m; if (!HOME) store.set('mode', m);
     ep.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
-    $('form textarea').placeholder = { ask: 'Ask about this lecture', tutor: 'Answer, or type "start"', edit: 'What should change in the guide?' }[m];
+    $('form textarea').placeholder = { ask: 'Ask about this lecture', tutor: 'Answer, or type "start"', edit: 'What should change in the guide?', home: 'Create a workspace, add a lecture from Granola, ask anything…' }[m];
     pill(); renderAll();
   }
   ep.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => setMode(b.dataset.m)));
@@ -181,8 +192,8 @@
     html += p.text.trim() ? md(p.text) : live ? '<span class="ep-think">' + (tools.length ? 'Working…' : 'Thinking…') + '</span>' : '';
     node.innerHTML = html;
     if (p.quiz && !live) node.append(card(p.quiz, msg));
-    if (msg.rebuilt && !live) {
-      const b = Object.assign(document.createElement('button'), { className: 'reload', textContent: 'Reload the guide' });
+    if (msg.rebuilt && !live && !HOME) {
+      const b = Object.assign(document.createElement('button'), { className: 'reload', textContent: HOME ? 'Refresh workspaces' : 'Reload the guide' });
       b.onclick = () => location.reload(); node.append(b);
     }
   }
@@ -199,6 +210,7 @@
       box.innerHTML = `<div class="m e">${{
         ask: 'Ask anything about the lecture you are reading, or select text in the guide. Claude answers from the guide and digs into the slides, readings and recordings when the guide is thin.',
         tutor: 'The tutor first finds out what you already know, then teaches the topic one step at a time and checks each step with a question. Type "start".',
+        home: 'This chat works across all your workspaces. Try: "create a workspace for Corporate Finance with the PDFs in that folder", "add Lecture 4 of Managing People from my Granola recording of 12/11", "which topics do my two courses share?".',
         edit: 'Change the guide itself. For example: "add Lecture 4 from my Granola recording of 12/11", "expand the AMO model with the Bos-Nehles paper", "add more practice for Lecture 2". Claude reads the material, edits the guide and rebuilds it.',
       }[mode]}</div>`;
     } else hist[mode].forEach((m) => addNode(m, false));
@@ -306,6 +318,7 @@
       });
     } catch (err) { if (err.name !== 'AbortError') target += (target ? '\n\n' : '') + 'Could not reach Claude: ' + err.message; else shown = target.length; }
     done = true; await drain; reply.content = target;
+    if (HOME && reply.rebuilt) window.estudioRefresh?.();
     box.removeEventListener('wheel', onScroll); box.removeEventListener('touchmove', onScroll);
     busy = null; fillAssistant(node, reply, false); renderPlan(); save(); grow();
     if (stick) box.scrollTop = box.scrollHeight;

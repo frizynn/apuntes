@@ -21,13 +21,17 @@ It is an agent skill (Claude Code or Codex): the agent follows `SKILL.md` and ru
 
 A lecture's sources can be any PDF (slides, papers, chapters), plain-text transcripts, Granola recordings, or audio transcribed with `transcribe_groq.sh`. Canvas is optional.
 
+## Workspaces
+
+`node scripts/estudio.mjs <folder>` opens a home at `http://localhost:4317` that lists every course found in that folder (any `<Course>/apunte/course.json`), lets you create a new one, and has a chat that works across all of them: "create a workspace for Corporate Finance with the PDFs in that folder", "add Lecture 4 from my Granola recording", "which topics do my courses share?". Guides it changes are rebuilt automatically.
+
 ## Try the example
 
 ```sh
 git clone https://github.com/frizynn/apuntes
 cd apuntes
 python3 scripts/build_html.py example/apunte    # builds example/Negociacion - Guia de estudio.html
-node scripts/estudio.mjs example/apunte          # opens http://localhost:4317 with the chat
+node scripts/estudio.mjs example                 # opens the workspace home at http://localhost:4317
 ```
 
 Opened as a plain file, without the server, the guide still works (contents, practice, mock exam), just without the chat.
@@ -37,7 +41,7 @@ Opened as a plain file, without the server, the guide still works (contents, pra
 1. Install the skill: link this folder as `~/.claude/skills/apuntes` (and/or `~/.agents/skills/apuntes`).
 2. Create `<Course>/apunte/course.json` from `example/apunte/course.json`: title, guide language, what the exam covers, and one entry per lecture with its sources.
 3. Ask your agent: `/apuntes` and "build the guide for <course>" or "add the new lecture". It runs one writer per lecture, checks them, writes the practice and rebuilds the HTML.
-4. Study with `node scripts/estudio.mjs "<Course>/apunte" ...` (several courses at once is fine).
+4. Study with `node scripts/estudio.mjs <folder with your courses>`.
 
 ## How the chat works
 
@@ -59,7 +63,8 @@ scripts/
   check.sh                style checks for a written lecture
   check_practice.py       validate practice questions
   build_html.py           build the guide: contents, practice, mock exam
-  estudio.mjs             local server with the Claude chat
+  estudio.mjs             local server: workspace home, guides and the Claude chat
+  home.html, theme.css    the workspace home and the shared light/dark colours
   estudio_panel.js        the chat (Ask, Tutor, grading)
   assemble.py, render_pdf.mjs, export_docx.py   PDF or docx output
   transcribe_groq.sh      transcribe lecture audio (Groq Whisper)
