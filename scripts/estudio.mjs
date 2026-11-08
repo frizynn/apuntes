@@ -58,6 +58,7 @@ function outline(c) {
     .map((f) => read(path.join(c.root, 'lectures', f)).split('\n').filter((l) => /^#{1,2} /.test(l)).join('\n')).join('\n\n');
 }
 
+const DIAGRAM = 'When a process, model, comparison or structure would be clearer as a picture, add one diagram as a fenced ```svg block: viewBox width 720 (height to fit), first element <rect class="panel" x="0" y="0" width="720" height="H" rx="14"/>, boxes rx="10", colours ONLY through classes (shapes: box, acc-box, acc-fill, bad-fill, good-fill; lines: line, acc-line, dash; arrowheads: <marker> paths with class head or acc-head; text: strong, title, small, b, acc, bad, good, mid), never fill/stroke colours or style attributes, 2-5 words per box, one accent for the key element, 15px text. Keep text inside its box.';
 const STYLE = 'Reply in the language the student writes in (default: the language of the guide). Plain, direct, short sentences; if replying in Spanish use "vos". Give exam terms in English the first time, with their meaning. No em dashes. Format: short paragraphs, "- " lists only for real lists, **bold** only for the key term.';
 const QUIZ = `To ask the student a question, end your message with exactly one fenced block and nothing after it:
 \`\`\`quiz
@@ -86,10 +87,10 @@ Stay inside the guide's content; never invent facts. ${QUIZ}`,
 const SKILL = path.dirname(here);
 const SOURCES = (c) => `Your working directory is the course folder. It holds the original material (slides, readings, books as PDFs). Prepared text versions: apunte/sources/slides/LNN.txt, apunte/sources/readers/*.txt, apunte/sources/book/*.txt. Lecture write-ups: apunte/lectures/LNN.md. apunte/course.json maps every lecture to its sources and its Granola meeting IDs (lecture recordings; read them with the Granola get_meeting_transcript tool, paging with offset).`;
 const LOOKUP = 'When the guide does not cover what is asked well enough, look it up in the course material (Grep the .txt versions first, then Read; Granola for what was said in class) and say where it comes from (file and slide or page). Use tools only when needed and keep it quick.';
-SYSTEM.ask = ((base) => (c) => base(c) + ' ' + SOURCES(c) + ' ' + LOOKUP)(SYSTEM.ask);
-SYSTEM.tutor = ((base) => (c) => base(c) + '\n\n' + SOURCES(c) + ' ' + LOOKUP)(SYSTEM.tutor);
+SYSTEM.ask = ((base) => (c) => base(c) + ' ' + SOURCES(c) + ' ' + LOOKUP + ' ' + DIAGRAM + ' If the student attaches images, read them carefully: they are usually slides, notes or exam questions.')(SYSTEM.ask);
+SYSTEM.tutor = ((base) => (c) => base(c) + '\n\n' + SOURCES(c) + ' ' + LOOKUP + ' ' + DIAGRAM)(SYSTEM.tutor);
 SYSTEM.edit = (c) => `You maintain the study guide of "${c.cfg.title}" with the "apuntes" skill at ${SKILL}. Before changing anything, read ${SKILL}/SKILL.md and the brief it points to for the task (references/writer-brief.md for lecture text, references/practice-brief.md for practice). ${SOURCES(c)}
-The student tells you in the chat what to change: add a lecture, update one from new material (a Granola recording, new slides), expand a thin section, fix an error, add practice questions. Do it yourself, one lecture at a time, following the briefs (sources, length, images, checks). Prepare a lecture's inputs with: python3 ${SKILL}/scripts/prepare_lecture.py apunte NN. Validate with ${SKILL}/scripts/check.sh apunte LNN and python3 ${SKILL}/scripts/check_practice.py apunte. Never invent content. Do not run build_html.py: the guide is rebuilt automatically when you finish. If the request is unclear, ask one short question instead of guessing. Finish with a short summary in the student's language: what changed, and what you could not verify. No em dashes.`;
+The student tells you in the chat what to change: add a lecture, update one from new material (a Granola recording, new slides), expand a thin section, fix an error, add practice questions. Do it yourself, one lecture at a time, following the briefs (sources, length, images, checks). Diagrams are SVG files in apunte/img/LNN/ that follow references/diagram-brief.md; to change one, edit the SVG and look at it with node ${SKILL}/scripts/render_svg.mjs <svg> /tmp/<name> (then Read the PNGs). Images the user attaches are context (a slide, a photo of notes, a diagram to copy). Prepare a lecture's inputs with: python3 ${SKILL}/scripts/prepare_lecture.py apunte NN. Validate with ${SKILL}/scripts/check.sh apunte LNN and python3 ${SKILL}/scripts/check_practice.py apunte. Never invent content. Do not run build_html.py: the guide is rebuilt automatically when you finish. If the request is unclear, ask one short question instead of guessing. Finish with a short summary in the student's language: what changed, and what you could not verify. No em dashes.`;
 
 SYSTEM.home = () => `You are the study assistant on the student's workspace home. A workspace is a course: a folder with apunte/course.json and one study guide. The working directory holds all of them:
 ${courses.map((c) => { const w = workspaceInfo(c); return `- "${w.title}" in ${w.folder}/ (${w.lectures} lectures written, ${w.questions} practice questions)`; }).join('\n') || '- (none yet)'}
@@ -119,7 +120,7 @@ const MODELS = ['haiku', 'sonnet', 'opus'], EFFORTS = ['low', 'medium', 'high', 
 const READ_TOOLS = ['Read', 'Grep', 'Glob', 'WebSearch', 'WebFetch', 'mcp__claude_ai_Granola'];
 const editTools = () => [...READ_TOOLS, 'Edit', 'Write', 'MultiEdit',
   ...['prepare_lecture.py', 'check_practice.py', 'extract_notes.py'].map((f) => `Bash(python3 ${SKILL}/scripts/${f}:*)`),
-  `Bash(${SKILL}/scripts/check.sh:*)`, 'Bash(pdftotext:*)', 'Bash(pdftoppm:*)', 'Bash(sips:*)', 'Bash(ls:*)', 'Bash(mkdir:*)', 'Bash(rm apunte/img/:*)'];
+  `Bash(${SKILL}/scripts/check.sh:*)`, `Bash(node ${SKILL}/scripts/render_svg.mjs:*)`, 'Bash(pdftotext:*)', 'Bash(pdftoppm:*)', 'Bash(sips:*)', 'Bash(ls:*)', 'Bash(mkdir:*)', 'Bash(rm apunte/img/:*)'];
 const busyEdit = new Set();
 
 function describe(name, input, cwd) {
@@ -148,7 +149,7 @@ function runClaude(c, mode, system, prompt, res, opts = {}) {
       : ['--tools', 'Read,Grep,Glob,WebSearch,WebFetch,ToolSearch', '--allowedTools', ...READ_TOOLS];
   const child = spawn('claude', ['-p', '--model', model, ...(effort ? ['--effort', effort] : []), ...tools, '--disable-slash-commands',
     '--no-session-persistence', '--setting-sources', '', '--system-prompt', system,
-    '--output-format', 'stream-json', '--verbose', '--include-partial-messages'], { cwd: mode === 'grade' ? EMPTY : cwd, env });
+    '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose', '--include-partial-messages'], { cwd: mode === 'grade' ? EMPTY : cwd, env });
   res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-cache' });
   const emit = (o) => res.write(JSON.stringify(o) + '\n');
   let buf = '', sent = false, err = '';
@@ -188,7 +189,10 @@ function runClaude(c, mode, system, prompt, res, opts = {}) {
     next(0, []);
   });
   res.on('close', () => { if (child.exitCode === null) child.kill(); });
-  child.stdin.end(prompt);
+  // One user turn: the prompt text plus any images the student attached (sent to the model directly, no tool needed).
+  const images = (opts.images || []).slice(0, 6).filter((im) => /^image\/(png|jpeg|gif|webp)$/.test(im.type) && typeof im.data === 'string');
+  const content = [{ type: 'text', text: prompt }, ...images.map((im) => ({ type: 'image', source: { type: 'base64', media_type: im.type, data: im.data } }))];
+  child.stdin.end(JSON.stringify({ type: 'user', message: { role: 'user', content } }) + '\n');
 }
 
 function createWorkspace(body, res) {
@@ -222,7 +226,7 @@ const server = http.createServer((req, res) => {
   if (parts[0] === 'api') {
     if (req.method !== 'POST' || req.headers['x-estudio-token'] !== TOKEN) { res.writeHead(403); return res.end('token'); }
     let raw = '';
-    req.on('data', (d) => { raw += d; if (raw.length > 2e5) req.destroy(); });
+    req.on('data', (d) => { raw += d; if (raw.length > 3e7) req.destroy(); });
     req.on('end', () => {
       try {
         const body = JSON.parse(raw);
@@ -253,7 +257,7 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && parts[1] === 'api') {
     if (req.headers['x-estudio-token'] !== TOKEN) { res.writeHead(403); return res.end('token'); }
     let raw = '';
-    req.on('data', (d) => { raw += d; if (raw.length > 2e5) req.destroy(); });
+    req.on('data', (d) => { raw += d; if (raw.length > 3e7) req.destroy(); });
     req.on('end', () => {
       try {
         const body = JSON.parse(raw);

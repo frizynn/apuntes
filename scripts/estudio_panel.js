@@ -69,6 +69,14 @@
   @media (pointer:coarse){#ep textarea{font-size:16px!important}}
   #ep form .send{margin-left:auto;width:30px;height:30px;border:0;border-radius:15px;background:var(--fg);color:var(--on-fg);cursor:pointer;display:grid;place-items:center}
   #ep form .send:disabled{opacity:.25;cursor:default}
+  #ep .att{display:none;gap:6px;padding:10px 10px 0;flex-wrap:wrap}#ep .att.show{display:flex}
+  #ep .att span{position:relative;width:56px;height:56px;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--hover2)}
+  #ep .att img{width:100%;height:100%;object-fit:cover;display:block}
+  #ep .att button{position:absolute;top:2px;right:2px;width:18px;height:18px;border:0;border-radius:9px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;line-height:18px;cursor:pointer;padding:0}
+  #ep form.drop{box-shadow:0 0 0 1.5px var(--acc)}
+  #ep .clip{width:26px;height:26px;border:0;background:none;border-radius:7px;color:var(--mute);cursor:pointer;display:grid;place-items:center}#ep .clip:hover{background:var(--hover);color:var(--fg)}
+  #ep .m.u .thumbs{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}#ep .m.u .thumbs img{width:56px;height:56px;object-fit:cover;border-radius:6px}
+  #ep .m figure.dg{margin:10px 0;padding:10px;border-radius:12px}#ep .m figure.dg svg{max-height:none}
   #ep-ask{position:absolute;z-index:9;display:none;height:28px;padding:0 12px;border:0;border-radius:14px;background:var(--fg);color:var(--on-fg);font:inherit;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15)}
   `;
   document.head.append(Object.assign(document.createElement('style'), { textContent: css }));
@@ -91,11 +99,25 @@
       try { return JSON.parse(m[1]); } catch { return null; }
     };
     out.plan = grab('plan'); out.quiz = grab('quiz');
+    out.svgs = [];
+    out.text = out.text.replace(/```svg\s*([\s\S]*?)```/g, (_, code) => { out.svgs.push(code); return `\n\n§DG${out.svgs.length - 1}§\n\n`; });
     const open = out.text.indexOf('```');
     if (open >= 0) out.text = out.text.slice(0, open);
     return out;
   }
 
+  // Diagrams Claude draws in a reply: parsed as SVG and stripped of anything active before being shown.
+  function safeSvg(code) {
+    const doc = new DOMParser().parseFromString(code.trim(), 'image/svg+xml');
+    const svg = doc.documentElement;
+    if (svg.nodeName !== 'svg' || doc.querySelector('parsererror')) return '';
+    svg.querySelectorAll('script,foreignObject,iframe,image,use[href^="http"]').forEach((n) => n.remove());
+    for (const n of [svg, ...svg.querySelectorAll('*')]) for (const a of [...n.attributes]) {
+      if (/^on/i.test(a.name) || a.name === 'style' || (/href$/i.test(a.name) && !a.value.startsWith('#'))) n.removeAttribute(a.name);
+    }
+    svg.removeAttribute('width'); svg.removeAttribute('height');
+    return '<figure class="dg">' + new XMLSerializer().serializeToString(svg) + '</figure>';
+  }
   const icon = (d) => `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const ep = document.createElement('aside');
   ep.id = 'ep';
@@ -103,7 +125,7 @@
       <button class="ic" data-act="new" title="New chat" aria-label="New chat">${icon('<path d="M8 3.5v9M3.5 8h9"/>')}</button>
       <button class="ic" data-act="full" title="Expand" aria-label="Expand">${icon('<path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9"/>')}</button></div>
     <div class="ctx"></div><div class="plan"></div><div class="msgs"></div><div class="sel"><span></span><button type="button" aria-label="Clear">✕</button></div>
-    <form><textarea rows="1" placeholder="Ask about this lecture"></textarea><div class="row"><button type="button" class="pick" data-k="mode"></button><button type="button" class="pick" data-k="model"></button><button type="button" class="pick" data-k="effort"></button><button class="send" aria-label="Send" disabled>${icon('<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>')}</button></div></form>`;
+    <form><div class="att"></div><input type="file" accept="image/*" multiple hidden><textarea rows="1" placeholder="Ask about this lecture"></textarea><div class="row"><button type="button" class="clip" title="Attach images (or paste / drop them)" aria-label="Attach images">${icon('<path d="M13 7.5 8 12.5a3 3 0 0 1-4.2-4.2L9 3.1a2 2 0 0 1 2.8 2.8L6.7 11a1 1 0 0 1-1.4-1.4L10 4.9"/>')}</button><button type="button" class="pick" data-k="mode"></button><button type="button" class="pick" data-k="model"></button><button type="button" class="pick" data-k="effort"></button><button class="send" aria-label="Send" disabled>${icon('<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>')}</button></div></form>`;
   const toggle = document.createElement('button');
   toggle.className = 'b'; toggle.title = 'Chat'; toggle.setAttribute('aria-label', 'Chat');
   toggle.innerHTML = icon('<rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M6 2.5v11"/>') + '<span>Chat</span>';
@@ -124,7 +146,7 @@
   };
   const course = location.pathname;
   const hist = { ask: store.get(course + ':ask', []), tutor: store.get(course + ':tutor', []), edit: store.get(course + ':edit', []), home: store.get(course + ':home', []) };
-  const save = () => { for (const k in hist) store.set(course + ':' + k, hist[k].slice(-60)); };
+  const save = () => { for (const k in hist) store.set(course + ':' + k, hist[k].slice(-60).map(({ thumbs, ...m }) => (thumbs ? { ...m, content: m.content + `\n[${thumbs.length} image${thumbs.length > 1 ? 's' : ''}]` } : m))); };
   let mode = HOME ? 'home' : store.get('mode', 'ask'), selection = '', busy = null;
   const CHOICES = {
     mode: [['ask', 'Ask', 'questions about the lecture'], ['tutor', 'Tutor', 'teaches you step by step'], ['edit', 'Edit', 'changes the guide']],
@@ -204,7 +226,7 @@
     let html = '';
     if (tools.length) html = live ? `<div class="tools">${tools.slice(-3).map((t) => `<div>${esc(t)}</div>`).join('')}</div>`
       : `<details class="tools"><summary>Used ${tools.length} step${tools.length > 1 ? 's' : ''} ›</summary>${tools.map((t) => `<div>${esc(t)}</div>`).join('')}</details>`;
-    html += p.text.trim() ? md(p.text) : live ? '<span class="ep-think">' + (tools.length ? 'Working…' : 'Thinking…') + '</span>' : '';
+    html += p.text.trim() ? md(p.text).replace(/<p>§DG(\d+)§<\/p>/g, (_, i) => safeSvg(p.svgs[i])) : live ? '<span class="ep-think">' + (tools.length ? 'Working…' : 'Thinking…') + '</span>' : '';
     node.innerHTML = html;
     if (p.quiz) node.append(cardFor(p.quiz, msg));
     if (msg.rebuilt && !live && !HOME) {
@@ -215,7 +237,10 @@
   function addNode(msg, animate) {
     const n = document.createElement('div');
     n.className = 'm' + (msg.role === 'user' ? ' u' : '') + (animate ? ' new' : '');
-    if (msg.role === 'user') n.textContent = msg.content; else fillAssistant(n, msg, false);
+    if (msg.role === 'user') {
+      if (msg.thumbs?.length) { const t = document.createElement('div'); t.className = 'thumbs'; t.innerHTML = msg.thumbs.map((u) => `<img src="${u}" alt="">`).join(''); n.append(t); }
+      n.append(document.createTextNode(msg.content));
+    } else fillAssistant(n, msg, false);
     box.append(n);
     return n;
   }
@@ -305,17 +330,47 @@
   }
   const opts = () => ({ ...pickVal });
 
+  let atts = [];
   const ta = $('form textarea'), sendBtn = $('form .send');
-  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 200) + 'px'; sendBtn.disabled = !ta.value.trim() || !!busy; };
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 200) + 'px'; sendBtn.disabled = (!ta.value.trim() && !atts.length) || !!busy; };
   ta.addEventListener('input', grow);
   ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('form').requestSubmit(); } });
-  $('form').onsubmit = (e) => { e.preventDefault(); const t = ta.value.trim(); if (t && !busy) { ta.value = ''; send(t); } };
+  $('form').onsubmit = (e) => { e.preventDefault(); const t = ta.value.trim(); if ((t || atts.length) && !busy) { ta.value = ''; send(t || 'What is this?'); } };
   $('.sel button').onclick = () => { selection = ''; $('.sel').style.display = 'none'; };
+
+  // Attachments: paste, drop or pick images; each is shrunk to at most 1600px before sending.
+  const attBox = $('.att'), fileIn = $('input[type=file]');
+  const paintAtts = () => {
+    attBox.classList.toggle('show', atts.length > 0);
+    attBox.innerHTML = atts.map((a, i) => `<span><img src="${a.url}" alt=""><button type="button" data-i="${i}" aria-label="Remove">✕</button></span>`).join('');
+    attBox.querySelectorAll('button').forEach((b) => (b.onclick = () => { atts.splice(Number(b.dataset.i), 1); paintAtts(); grow(); }));
+    grow();
+  };
+  async function addFile(f) {
+    if (!f || !f.type.startsWith('image/') || atts.length >= 6) return;
+    const img = await createImageBitmap(f);
+    const k = Math.min(1, 1600 / Math.max(img.width, img.height));
+    const cv = Object.assign(document.createElement('canvas'), { width: Math.round(img.width * k), height: Math.round(img.height * k) });
+    cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    const url = cv.toDataURL('image/jpeg', 0.85);
+    atts.push({ url, type: 'image/jpeg', data: url.split(',')[1] }); paintAtts();
+  }
+  $('.clip').onclick = () => fileIn.click();
+  fileIn.onchange = async () => { for (const f of fileIn.files) await addFile(f); fileIn.value = ''; };
+  ta.addEventListener('paste', async (e) => {
+    const files = [...(e.clipboardData?.files || [])].filter((f) => f.type.startsWith('image/'));
+    if (files.length) { e.preventDefault(); for (const f of files) await addFile(f); }
+  });
+  const formEl = $('form');
+  ep.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); formEl.classList.add('drop'); } });
+  ep.addEventListener('dragleave', (e) => { if (!ep.contains(e.relatedTarget)) formEl.classList.remove('drop'); });
+  ep.addEventListener('drop', async (e) => { e.preventDefault(); formEl.classList.remove('drop'); for (const f of e.dataTransfer.files) await addFile(f); });
 
   async function send(text) {
     const h = hist[mode], m = mode;
     if (!h.length) box.innerHTML = '';
-    const user = { role: 'user', content: selection ? `About: "${selection.slice(0, 200)}${selection.length > 200 ? '…' : ''}"\n${text}` : text };
+    const sending = atts; atts = []; paintAtts();
+    const user = { role: 'user', thumbs: sending.length ? sending.map((a) => a.url) : undefined, content: selection ? `About: "${selection.slice(0, 200)}${selection.length > 200 ? '…' : ''}"\n${text}` : text };
     h.push(user); addNode(user, true);
     const reply = { role: 'assistant', content: '' };
     const node = addNode(reply, true); fillAssistant(node, reply, true);
@@ -342,7 +397,7 @@
     requestAnimationFrame(tick);
     try {
       reply.tools = [];
-      await stream({ mode: m, lec: s ? s.id : null, selection: sel, messages: h.slice(0, -1).map(({ role, content }) => ({ role, content })), ...opts() }, (t) => {
+      await stream({ mode: m, lec: s ? s.id : null, selection: sel, messages: h.slice(0, -1).map(({ role, content }) => ({ role, content })), images: sending.map(({ type, data }) => ({ type, data })), ...opts() }, (t) => {
         target = t;
       }, busy.signal, (ev) => {
         if (ev.t === 'tool') reply.tools.push(ev.d);

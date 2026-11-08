@@ -58,16 +58,6 @@ aside.side a{display:block;color:var(--mute);text-decoration:none;padding:3px 0}
 aside.side .l{font-weight:600;margin-top:10px}aside.side .s{padding-left:10px}
 aside.side .grp:not(.open) .s{display:none}
 aside.side a.on,nav a.on{color:var(--acc)}
-figure.dg{margin:24px 0;padding:18px;border-radius:16px;background:var(--d-bg)}
-figure.dg svg{display:block;width:100%;height:auto;max-height:560px;font-family:inherit}
-figure.dg figcaption{margin-top:10px}
-.dg .panel{fill:var(--d-panel);stroke:none}.dg .box{fill:var(--d-box);stroke:var(--d-stroke);stroke-width:1.5}
-.dg .acc-box{fill:var(--d-box);stroke:var(--d-acc);stroke-width:1.5}.dg .acc-fill{fill:var(--d-acc-fill);stroke:var(--d-acc);stroke-width:1.5}
-.dg .bad-fill{fill:var(--d-bad-fill);stroke:var(--d-bad);stroke-width:1.5}.dg .good-fill{fill:var(--d-good-fill);stroke:var(--d-good);stroke-width:1.5}
-.dg .line{fill:none;stroke:var(--d-stroke);stroke-width:1.5}.dg .acc-line{fill:none;stroke:var(--d-acc);stroke-width:1.5}.dg .dash{stroke-dasharray:4 4}
-.dg .head{fill:var(--d-stroke)}.dg .acc-head{fill:var(--d-acc)}
-.dg text{fill:var(--d-text);font-size:15px}.dg .strong{fill:var(--d-strong)}.dg .title{fill:var(--d-text);font-size:17px;font-weight:600}
-.dg .b{font-weight:600}.dg .acc{fill:var(--d-acc)}.dg .bad{fill:var(--d-bad)}.dg .good{fill:var(--d-good)}.dg .small{font-size:13px}.dg .mid{text-anchor:middle}
 blockquote.idea{border-left-color:var(--acc)}
 body.paged section.lec{display:none}body.paged section.lec.cur{display:block;border-top:0;margin-top:0;padding-top:28px}
 body.paged:not(.at-top) #overview{display:none}
