@@ -64,6 +64,8 @@ aside.side a.on,nav a.on{color:var(--acc)}
 .q summary{cursor:pointer;color:var(--acc);font-size:15px}
 .score{color:var(--mute);font-size:14px}
 .btn{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;cursor:pointer}
+#exam{max-width:740px;margin:0 auto;padding:28px 16px 96px}#exam .back{display:inline-block;color:var(--mute);text-decoration:none;font-size:14px;margin-bottom:16px}#exam .back:hover{color:var(--fg)}
+body.exam main,body.exam aside.side,body.exam .top{display:none!important}
 .top{position:fixed;right:16px;bottom:16px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;color:var(--mute);text-decoration:none}
 """
 
@@ -85,7 +87,7 @@ UI = {"es": ("Inicio", "Guía de estudio: {n} clases, actualizada el {d}.", "Ín
       "en": ("Home", "Study guide: {n} lectures, updated {d}.", "Contents", "Top", "Practice", "Mock exam",
              "Answer first, then read the explanation.", "See in the guide", "Write your answer before looking",
              "What the answer needs", "Model answer", "New mock exam", "Correct",
-             "Mixed questions from every lecture, like the exam. Each click draws new ones.")}[cfg.get("language", "en")]
+             "Mixed questions from every lecture, like the exam. Each click draws new ones.")}[cfg.get("ui_language", "en")]
 practice = {}
 sections, toc, side = [], [], []
 for f in files:
@@ -125,7 +127,7 @@ page = f"""<!doctype html>
 <title>{html.escape(cfg['title'])}</title>
 <style>{CSS}</style></head>
 <body>
-<nav class="bar"><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#simulacro"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
+<nav class="bar"><span id="barl"></span><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#exam"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
 <main id="top">
 <h1>{html.escape(cfg['title'])}</h1>
 <p class="lead">{UI[1].format(n=len(files), d=date.today().strftime('%d/%m/%Y'))}</p>
@@ -133,9 +135,9 @@ page = f"""<!doctype html>
 {chr(10).join(toc)}
 </ol></div>
 {chr(10).join(sections)}
-{f'''<section class="lec" id="simulacro"><h2>{UI[5]}</h2><p class="lead">{UI[13]}</p>
-<button class="btn" id="newsim">{UI[11]}</button><div id="sim"></div></section>''' if practice else ""}
 </main>
+{f'''<div id="exam" hidden><a class="back" href="#top">&larr; {UI[0]}</a><h1>{UI[5]}</h1><p class="lead">{UI[13]}</p>
+<button class="btn" id="newsim">{UI[11]}</button><div id="sim"></div></div>''' if practice else ""}
 <aside class="side">{''.join(side)}</aside>
 <a class="top" href="#top">{UI[3]}</a>
 <script>
@@ -170,13 +172,18 @@ function mc(q,n,box){{const d=el('div','q');d.append(el('p','qt',n+'. '+md(q.q))
 function op(q,n){{const d=el('div','q');d.append(el('p','qt',n+'. '+md(q.q)));const ta=el('textarea');ta.placeholder=T[1];d.append(ta);
   const det=el('details');det.append(el('summary','',T[2]));det.append(el('ul','',q.points.map(p=>'<li>'+md(p)+'</li>').join('')));
   det.append(el('p','','<b>'+T[3]+':</b> '+md(q.model)+' <a href="#'+q.ref+'">'+T[0]+'</a>'));
-  if(window.ESTUDIO){{const b=el('button','btn','Corregir con Claude'),out=el('div','why');b.onclick=()=>window.estudioGrade(out,q.lec,P[q.lec].open.indexOf(q),ta.value,b);d.append(b,out);}}
+  if(window.ESTUDIO){{const b=el('button','btn','Grade with Claude'),out=el('div','why');b.onclick=()=>window.estudioGrade(out,q.lec,P[q.lec].open.indexOf(q),ta.value,b);d.append(b,out);}}
   d.append(det);return d;}}
 function fill(box,mcs,ops){{box.innerHTML='';box.append(el('p','score'));let n=1;mcs.forEach(q=>box.append(mc(q,n++,box)));ops.forEach(q=>box.append(op(q,n++)));score(box);}}
 document.querySelectorAll('.pr').forEach(b=>{{const p=P[b.dataset.lec];fill(b,p.mc||[],p.open||[]);}});
 function shuffle(a){{a=a.slice();for(let i=a.length-1;i>0;i--){{const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}return a;}}
 function sim(){{const all=Object.values(P);fill(document.getElementById('sim'),shuffle(all.flatMap(p=>p.mc||[])).slice(0,20),shuffle(all.flatMap(p=>p.open||[])).slice(0,2));}}
-const nb=document.getElementById('newsim');if(nb){{nb.onclick=sim;sim();}}
+const nb=document.getElementById('newsim');if(nb)nb.onclick=()=>{{sim();scrollTo(0,0);}};
+const ex=document.getElementById('exam');let pos=0;
+function route(){{if(!ex)return;const on=location.hash==='#exam';if(on&&!document.body.classList.contains('exam'))pos=scrollY;
+  document.body.classList.toggle('exam',on);ex.hidden=!on;document.querySelector('nav.bar a[href="#exam"]')?.classList.toggle('on',on);
+  if(on){{if(!document.getElementById('sim').children.length)sim();scrollTo(0,0);}}else if(location.hash==='#top'||!location.hash)scrollTo(0,pos);}}
+addEventListener('hashchange',route);route();
 </script>
 </body></html>
 """

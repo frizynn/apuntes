@@ -35,31 +35,52 @@ function outline(c) {
     .map((f) => read(path.join(c.root, 'lectures', f)).split('\n').filter((l) => /^#{1,2} /.test(l)).join('\n')).join('\n\n');
 }
 
-const STYLE = 'Escribís en español rioplatense (vos), simple y directo, frases cortas. Los términos del examen van en inglés la primera vez, con su explicación. Sin em dash. Formato: párrafos cortos, listas con "- " sólo si son listas de verdad, **negrita** sólo para el término clave.';
+const STYLE = 'Reply in the language the student writes in (default: the language of the guide). Plain, direct, short sentences; if replying in Spanish use "vos". Give exam terms in English the first time, with their meaning. No em dashes. Format: short paragraphs, "- " lists only for real lists, **bold** only for the key term.';
+const QUIZ = `To ask the student a question, end your message with exactly one fenced block and nothing after it:
+\`\`\`quiz
+{"q": "question text", "options": ["option A", "option B", "option C", "option D"]}
+\`\`\`
+Use 3-4 options when there is a clear answer to choose; omit "options" for an open question (the student writes the answer). Never reveal the correct answer in the block or before the student answers. Do not repeat the question in your prose: the block shows it. The student replies with their answer, a confidence (probability 0-100 that it is right, absent if they said "I don't know") and optionally their reasoning. Read confidence against correctness: right and confident = held, move on; right but unsure = fragile, one reinforcing touch; wrong and confident = a committed misconception, name it and repair it before anything else; wrong and unsure or "I don't know" = an honest gap, a small correction. Use their reasoning to find exactly where the thinking broke.`;
 const SYSTEM = {
-  ask: (c) => `Sos el tutor de la materia "${c.cfg.title}" de un alumno universitario. ${STYLE} Respondé primero con lo que dice la guía de estudio (abajo, entre <guia>). Si la respuesta no está en la guía, decilo en una línea y después respondé con conocimiento general, marcado como tal. Nunca inventes estudios, autores ni números. Respuestas breves: lo justo para entender, con un ejemplo si ayuda. Examen: ${c.cfg.exam || ''}`,
-  tutor: (c) => `Sos un tutor que enseña paso a paso la materia "${c.cfg.title}". ${STYLE} Modo guiado: 1) si es el inicio, preguntá qué sabe el alumno del tema en una pregunta corta; 2) explicá UN paso por mensaje, apoyándote en lo que ya entiende; 3) cerrá cada mensaje con UNA pregunta corta para chequear (de aplicación a un caso cuando se pueda), y esperá; 4) si responde mal, corregí la confusión antes de avanzar; si responde bien, avanzá. La meta es que entienda la clase de la guía (abajo, entre <guia>). No inventes nada que no esté en la guía.`,
-  grade: (c) => `Corregís una respuesta abierta de examen de "${c.cfg.title}". ${STYLE} Usá la guía (entre <guia>), los puntos que busca el corrector y la respuesta modelo. Devolvé exactamente estas partes: **Nota estimada:** X/10 y una línea de por qué. **Lo que cubriste:** lista. **Lo que falta o está mal:** lista, con la corrección. **Versión mejorada:** la respuesta del alumno reescrita en inglés, 120-200 palabras, manteniendo sus ideas correctas. Sé justo: no premies largo, premiá los puntos.`,
+  ask: (c) => `You are the tutor for the course "${c.cfg.title}". ${STYLE} Answer from the study guide first (below, inside <guide>). If the answer is not in the guide, say so in one line and then answer from general knowledge, marked as such. Never invent studies, authors or numbers. Keep it brief: just enough to understand, with one example if it helps. Exam: ${c.cfg.exam || ''}`,
+  tutor: (c) => `You are a one-to-one tutor for the course "${c.cfg.title}". Your goal: the student ends up holding the chosen topic of the lecture in <guide> as obviously true, not memorised. ${STYLE}
+
+Work in phases, one question per message, always waiting for the answer:
+1. Goal. If the conversation is just starting, ask which topic of the lecture to work on, as a quiz block whose options are the lecture's main topics (plus "the whole lecture").
+2. Probe. Find what the student already holds and where it ends, with 2-5 quiz questions. Start near the hardest thing the goal needs; correct and confident jumps up, a miss walks down. Every question must move the edge; no warm-ups.
+3. Plan. Then show the route as a plan block, the smallest set of steps from what they hold to the goal, and start step 1 in the same message:
+\`\`\`plan
+{"steps": ["short step name", "..."], "current": 0}
+\`\`\`
+(The plan block goes before the text of the step. Send an updated plan block whenever "current" advances.)
+4. Teach. One reasoning step per message, built on what they already hold, in clear prose with one concrete example if useful; no meta-narration of the method. End every step with a check question (quiz block) that needs the step to answer, ideally a short case. Repair before moving on.
+5. Finish. When the goal is held, give a 3-5 line summary of the structure they built and suggest what to study next.
+
+Stay inside the guide's content; never invent facts. ${QUIZ}`,
+  grade: (c) => `You grade an open exam answer for "${c.cfg.title}". ${STYLE} Use the guide (inside <guide>), the points the grader looks for and the model answer. Return exactly these parts: **Estimated grade:** X/10 and one line why. **What you covered:** list. **Missing or wrong:** list, with the fix. **Improved version:** the student's answer rewritten in English, 120-200 words, keeping their correct ideas. Be fair: reward points, not length.`,
 };
 
 function buildPrompt(c, body) {
   const lec = /^l\d\d$/.test(body.lec || '') ? body.lec : null;
   const guide = lec ? lectureText(c, lec) : '';
-  const ctx = `<guia>\n${guide || '(sin clase seleccionada)'}\n</guia>\n\n<indice_de_la_materia>\n${outline(c)}\n</indice_de_la_materia>\n\n`;
+  const ctx = `<guide>\n${guide || '(no lecture selected)'}\n</guide>\n\n<course_outline>\n${outline(c)}\n</course_outline>\n\n`;
   if (body.mode === 'grade') {
     const q = practiceItem(c, lec, 'open', Number(body.index));
-    if (!q) throw new Error('pregunta no encontrada');
-    return ctx + `<pregunta>${q.q}</pregunta>\n<puntos>\n- ${q.points.join('\n- ')}\n</puntos>\n<modelo>${q.model}</modelo>\n<respuesta_del_alumno>\n${String(body.answer || '').slice(0, 6000)}\n</respuesta_del_alumno>`;
+    if (!q) throw new Error('question not found');
+    return ctx + `<question>${q.q}</question>\n<points>\n- ${q.points.join('\n- ')}\n</points>\n<model_answer>${q.model}</model_answer>\n<student_answer>\n${String(body.answer || '').slice(0, 6000)}\n</student_answer>`;
   }
-  const msgs = (body.messages || []).slice(-20).map((m) => `${m.role === 'user' ? 'ALUMNO' : 'TUTOR'}: ${String(m.content).slice(0, 4000)}`).join('\n\n');
-  const sel = body.selection ? `<texto_seleccionado>\n${String(body.selection).slice(0, 3000)}\n</texto_seleccionado>\n\n` : '';
-  return ctx + sel + `<conversacion>\n${msgs}\n</conversacion>\n\nRespondé al último mensaje del ALUMNO.`;
+  const msgs = (body.messages || []).slice(-20).map((m) => `${m.role === 'user' ? 'STUDENT' : 'TUTOR'}: ${String(m.content).slice(0, 6000)}`).join('\n\n');
+  const sel = body.selection ? `<selected_text>\n${String(body.selection).slice(0, 3000)}\n</selected_text>\n\n` : '';
+  return ctx + sel + `<conversation>\n${msgs}\n</conversation>\n\nReply to the STUDENT's last message.`;
 }
 
-function runClaude(system, prompt, res) {
+const MODELS = ['haiku', 'sonnet', 'opus'], EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
+function runClaude(system, prompt, res, opts = {}) {
+  const model = MODELS.includes(opts.model) ? opts.model : MODEL;
+  const effort = EFFORTS.includes(opts.effort) ? opts.effort : null;
   const env = { ...process.env, CLAUDE_CODE_DISABLE_CLAUDE_MDS: '1' };
   delete env.ANTHROPIC_API_KEY; // force the CLI's own login (subscription), never an API key from this shell
-  const child = spawn('claude', ['-p', '--model', MODEL, '--tools', '', '--strict-mcp-config', '--disable-slash-commands',
+  const child = spawn('claude', ['-p', '--model', model, ...(effort ? ['--effort', effort] : []), '--tools', '', '--strict-mcp-config', '--disable-slash-commands',
     '--no-session-persistence', '--setting-sources', '', '--system-prompt', system,
     '--output-format', 'stream-json', '--verbose', '--include-partial-messages'], { cwd: EMPTY, env });
   res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' });
@@ -79,7 +100,7 @@ function runClaude(system, prompt, res) {
     }
   });
   child.stderr.on('data', (d) => { err += d; });
-  child.on('close', (code) => { if (code && !sent) res.write(`[Claude no respondió (código ${code}). ${err.slice(0, 300)}]`); res.end(); });
+  child.on('close', (code) => { if (code && !sent) res.write(`[Claude did not answer (exit ${code}). ${err.slice(0, 300)}]`); res.end(); });
   res.on('close', () => child.kill());
   child.stdin.end(prompt);
 }
@@ -91,13 +112,13 @@ const server = http.createServer((req, res) => {
   const parts = url.pathname.split('/').filter(Boolean);
   if (!parts.length) {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    return res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Estudio</title><body style="font:16px/1.6 -apple-system,system-ui,sans-serif;max-width:560px;margin:48px auto;padding:0 16px"><h1 style="font-weight:600">Estudio</h1>${courses.map((c) => `<p><a href="/${c.slug}/" style="color:#c96442">${c.cfg.title}</a></p>`).join('')}</body>`);
+    return res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Study</title><body style="font:16px/1.6 -apple-system,system-ui,sans-serif;max-width:560px;margin:48px auto;padding:0 16px"><h1 style="font-weight:600">Study guides</h1>${courses.map((c) => `<p><a href="/${c.slug}/" style="color:#c96442">${c.cfg.title}</a></p>`).join('')}</body>`);
   }
   const c = courses.find((x) => x.slug === parts[0]);
   if (!c) { res.writeHead(404); return res.end('no existe'); }
   if (req.method === 'GET' && parts.length === 1) {
     const page = read(c.html);
-    if (!page) { res.writeHead(404); return res.end('Falta la guía: corré build_html.py'); }
+    if (!page) { res.writeHead(404); return res.end('Guide missing: run build_html.py'); }
     const cfg = `<script>window.ESTUDIO={token:${JSON.stringify(TOKEN)},api:${JSON.stringify('/' + c.slug + '/api')}};</script>`;
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return res.end(page.replace('</head>', () => cfg + '</head>').replace('</body>', () => `<script>${PANEL}</script></body>`));
@@ -110,7 +131,7 @@ const server = http.createServer((req, res) => {
       try {
         const body = JSON.parse(raw);
         const mode = ['ask', 'tutor', 'grade'].includes(body.mode) ? body.mode : 'ask';
-        runClaude(SYSTEM[mode](c), buildPrompt(c, { ...body, mode }), res);
+        runClaude(SYSTEM[mode](c), buildPrompt(c, { ...body, mode }), res, body);
       } catch (e) { res.writeHead(400); res.end(String(e.message)); }
     });
     return;
@@ -119,7 +140,7 @@ const server = http.createServer((req, res) => {
 });
 server.listen(PORT, '127.0.0.1', () => {
   const url = `http://localhost:${PORT}/` + (courses.length === 1 ? courses[0].slug + '/' : '');
-  console.log(`Estudio en ${url} (modelo ${MODEL}). Ctrl+C para cortar.`);
+  console.log(`Study server at ${url} (default model ${MODEL}). Ctrl+C to stop.`);
   if (!process.env.NO_OPEN) execFile('open', [url]);
 });
 process.on('exit', () => fs.rmSync(EMPTY, { recursive: true, force: true }));

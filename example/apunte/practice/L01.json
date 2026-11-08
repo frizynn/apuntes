@@ -1,16 +1,41 @@
-{"mc": [
- {"q": "Ana has a job offer paying 3,000 per month. A second company offers her 2,800. Which concept explains why she can turn it down calmly?",
-  "options": ["Her target point", "Her BATNA", "The anchoring effect", "The fixed-pie bias"], "answer": 1,
-  "why": "Su BATNA es la otra oferta de 3.000: si no hay acuerdo, tiene esa alternativa. El target point es lo que aspira a lograr, no su plan B.",
-  "ref": "Tu alternativa: el BATNA"},
- {"q": "What is the reservation point?",
-  "options": ["The first offer you make", "The average of both offers", "The worst deal you would still accept", "The best deal you can imagine"], "answer": 2,
-  "why": "Es el peor acuerdo que todavía aceptarías; por debajo preferís tu BATNA. La primera oferta tiene que ver con el anclaje, no con tu límite.",
-  "ref": "El punto de reserva"}
-],
-"open": [
- {"q": "You are selling your bike and a friend already offered you 200. Explain your BATNA and reservation point, and how you would use them.",
-  "points": ["BATNA: selling to the friend for 200", "Reservation point close to 200, derived from the BATNA", "Do not reveal the reservation point", "A strong BATNA lets you ask for more"],
-  "model": "My BATNA is selling the bike to my friend for 200, because that is what I can do if this negotiation fails. My reservation point is therefore about 200: I would not accept less from a new buyer. I would not reveal that number, because the buyer would then offer exactly 200. Since my alternative is solid, I can ask for more than 200 and walk away calmly if the buyer refuses.",
-  "ref": "El punto de reserva"}
-]}
+{
+ "mc": [
+  {
+   "q": "Ana has a job offer paying 3,000 per month. A second company offers her 2,800. Which concept explains why she can turn it down calmly?",
+   "options": [
+    "Her target point",
+    "Her BATNA",
+    "The anchoring effect",
+    "The fixed-pie bias"
+   ],
+   "answer": 1,
+   "why": "Her BATNA is the other offer of 3,000: if there is no deal, she still has it. A target point is what she hopes to get, not her plan B.",
+   "ref": "Your alternative: the BATNA"
+  },
+  {
+   "q": "What is the reservation point?",
+   "options": [
+    "The first offer you make",
+    "The average of both offers",
+    "The worst deal you would still accept",
+    "The best deal you can imagine"
+   ],
+   "answer": 2,
+   "why": "It is the worst deal you would still accept; below it you prefer your BATNA. The first offer is about anchoring, not your limit.",
+   "ref": "The reservation point"
+  }
+ ],
+ "open": [
+  {
+   "q": "You are selling your bike and a friend already offered you 200. Explain your BATNA and reservation point, and how you would use them.",
+   "points": [
+    "BATNA: selling to the friend for 200",
+    "Reservation point close to 200, derived from the BATNA",
+    "Do not reveal the reservation point",
+    "A strong BATNA lets you ask for more"
+   ],
+   "model": "My BATNA is selling the bike to my friend for 200, because that is what I can do if this negotiation fails. My reservation point is therefore about 200: I would not accept less from a new buyer. I would not reveal that number, because the buyer would then offer exactly 200. Since my alternative is solid, I can ask for more than 200 and walk away calmly if the buyer refuses.",
+   "ref": "The reservation point"
+  }
+ ]
+}
