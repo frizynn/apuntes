@@ -18,8 +18,12 @@ CSS = """
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;background:#fff;color:var(--fg);font:16px/1.65 "Anthropic Sans","Styrene B","Söhne",Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:740px;margin:0 auto;padding:32px 16px 96px}
-nav{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:14px;overflow-x:auto;white-space:nowrap;font-size:14px;z-index:2}
-nav a{color:var(--mute);text-decoration:none}nav a:hover{color:var(--fg)}
+nav.bar{position:sticky;top:0;z-index:8;height:48px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 1px 0 var(--line);display:flex;align-items:center;gap:4px;padding:0 10px;font-size:13px}
+nav.bar .t{flex:1;min-width:0;padding:0 6px;font-weight:550;font-size:14px;color:var(--fg);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav.bar .b{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--mute);font:inherit;font-size:13px;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .08s,color .08s}
+nav.bar .b:hover{background:rgba(0,0,0,.04);color:var(--fg)}nav.bar .b.on{background:rgba(0,0,0,.06);color:var(--fg)}
+nav.bar svg{width:16px;height:16px;flex:none}
+@media (max-width:520px){nav.bar .b span{display:none}nav.bar .b{padding:0 8px}}
 h1{font-size:28px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
 h2{font-size:23px;font-weight:600;margin:0 0 8px;letter-spacing:-.01em}
 h3{font-size:19px;font-weight:600;margin:40px 0 6px}
@@ -38,11 +42,12 @@ figcaption{color:var(--mute);font-size:13px;margin-top:6px}
 .toc ol{margin:6px 0 0;padding-left:22px}.toc li{margin:8px 0}
 .toc a{color:var(--fg);text-decoration:none;font-weight:500}.toc a:hover{color:var(--acc)}
 .toc span{display:block;color:var(--mute);font-size:13px;line-height:1.4}
-section.lec{scroll-margin-top:52px;border-top:1px solid var(--line);margin-top:56px;padding-top:36px}
+section.lec{scroll-margin-top:56px;border-top:1px solid var(--line);margin-top:56px;padding-top:36px}
 section.lec h3,section.lec h4{scroll-margin-top:52px}
 .kind{display:inline-block;font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:20px;padding:1px 9px;margin-bottom:8px}
-aside.side{display:none}
-@media (min-width:1180px){aside.side{display:block;position:fixed;top:64px;right:24px;width:270px;max-height:calc(100vh - 88px);overflow-y:auto;font-size:13px;line-height:1.4;padding-left:12px;border-left:1px solid var(--line)}}
+aside.side{display:none;font-size:13px;line-height:1.4}
+@media (min-width:1180px){body:not(.toc-off) aside.side{display:block;position:fixed;top:68px;right:24px;width:270px;max-height:calc(100vh - 92px);overflow-y:auto;padding-left:12px;box-shadow:-1px 0 0 var(--line)}}
+@media (max-width:1179px){body.toc-open aside.side{display:block;position:fixed;z-index:9;top:48px;left:0;right:0;bottom:0;overflow-y:auto;background:#fff;padding:12px 20px 40px}body.toc-open aside.side .grp .s{display:block}}
 aside.side a{display:block;color:var(--mute);text-decoration:none;padding:3px 0}aside.side a:hover{color:var(--fg)}
 aside.side .l{font-weight:600;margin-top:10px}aside.side .s{padding-left:10px}
 aside.side .grp:not(.open) .s{display:none}
@@ -82,7 +87,7 @@ UI = {"es": ("Inicio", "Guía de estudio: {n} clases, actualizada el {d}.", "Ín
              "What the answer needs", "Model answer", "New mock exam", "Correct",
              "Mixed questions from every lecture, like the exam. Each click draws new ones.")}[cfg.get("language", "en")]
 practice = {}
-sections, toc, nav, side = [], [], [], []
+sections, toc, side = [], [], []
 for f in files:
     key = f.stem.lower()
     lec = cfg["lectures"].get(f.stem[1:], {})
@@ -112,8 +117,6 @@ for f in files:
                 + "".join(f'<a class="s" href="#{i}">{re.sub(r"<[^>]+>", "", t)}</a>' for i, t in heads) + "</div>")
     sections.append(f'<section class="lec" id="{key}" data-src="{f.name}">\n<span class="kind">{html.escape(when)}</span>\n'
                     f'<h2>{html.escape(title)}</h2>\n{frag}</section>')
-    label = title.split(":")[0]
-    nav.append(f'<a href="#{key}">{html.escape(label)}</a>')
     toc.append(f'<li><a href="#{key}">{html.escape(title)}</a><span>{html.escape(", ".join(subs[:5]))}</span></li>')
 
 page = f"""<!doctype html>
@@ -122,7 +125,7 @@ page = f"""<!doctype html>
 <title>{html.escape(cfg['title'])}</title>
 <style>{CSS}</style></head>
 <body>
-<nav><a href="#top">{UI[0]}</a>{''.join(nav)}{f'<a href="#simulacro">{UI[5]}</a>' if practice else ""}</nav>
+<nav class="bar"><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#simulacro"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
 <main id="top">
 <h1>{html.escape(cfg['title'])}</h1>
 <p class="lead">{UI[1].format(n=len(files), d=date.today().strftime('%d/%m/%Y'))}</p>
@@ -136,7 +139,13 @@ page = f"""<!doctype html>
 <aside class="side">{''.join(side)}</aside>
 <a class="top" href="#top">{UI[3]}</a>
 <script>
-const links=[...document.querySelectorAll('aside.side a, nav a')];
+const links=[...document.querySelectorAll('aside.side a')];
+const tb=document.getElementById('tocbtn'),wide=()=>innerWidth>=1180;
+let tocOff=false;try{{tocOff=localStorage.getItem('toc-off')==='1'}}catch(e){{}}
+function tocSync(){{document.body.classList.toggle('toc-off',tocOff);tb.classList.toggle('on',wide()?!tocOff:document.body.classList.contains('toc-open'))}}
+tb.onclick=()=>{{if(wide()){{tocOff=!tocOff;try{{localStorage.setItem('toc-off',tocOff?'1':'0')}}catch(e){{}}}}else document.body.classList.toggle('toc-open');tocSync()}};
+document.querySelector('aside.side').addEventListener('click',e=>{{if(e.target.closest('a'))document.body.classList.remove('toc-open');tocSync()}});
+addEventListener('resize',tocSync);tocSync();
 const targets=[...document.querySelectorAll('section.lec, section.lec h3')];
 function spy(){{
   let cur=null;for(const t of targets){{if(t.getBoundingClientRect().top<innerHeight*0.35)cur=t;else break;}}

@@ -33,7 +33,7 @@ def words(p):
 
 
 def ocr(pdf, out_txt):
-    binary = Path.home() / ".cache" / "apunte-clase" / "ocr"
+    binary = Path.home() / ".cache" / "apuntes" / "ocr"
     if not binary.exists():
         binary.parent.mkdir(parents=True, exist_ok=True)
         run("swiftc", "-O", str(SKILL / "ocr.swift"), "-o", str(binary))

@@ -4,11 +4,10 @@
   if (!E) return;
   const css = `
   #ep{position:fixed;z-index:5;background:#fff;display:flex;flex-direction:column;font-size:14px;line-height:20px}
-  @media (min-width:1180px){#ep{top:44px;left:0;bottom:0;width:380px;box-shadow:1px 0 0 var(--line)}
-    body.ep-on main{margin-left:max(404px,calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - 404px - 310px))}#ep-fab{display:none}}
-  @media (max-width:1179px){#ep{inset:0}}
-  body:not(.ep-on) #ep{display:none}body.ep-on #ep-fab{display:none}
-  #ep-fab{position:fixed;left:16px;bottom:16px;z-index:6;height:36px;padding:0 16px;border:0;border-radius:18px;background:var(--fg);color:#fff;font:inherit;font-size:13px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  @media (min-width:1180px){#ep{top:48px;left:0;bottom:0;width:380px;box-shadow:1px 0 0 var(--line)}
+    body.ep-on main{margin-left:max(404px,calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - 404px - 310px))}body.ep-on.toc-off main{max-width:min(740px,calc(100vw - 404px - 24px))}}
+  @media (max-width:1179px){#ep{top:48px;left:0;right:0;bottom:0}}
+  body:not(.ep-on) #ep{display:none}
   #ep header{display:flex;align-items:center;padding:12px 12px 4px}
   #ep .seg{position:relative;display:flex;padding:3px;border-radius:12px;background:#f4f4f3}
   #ep .seg button{position:relative;z-index:1;height:30px;padding:0 12px;border:0;background:none;border-radius:9px;font:inherit;font-size:13px;color:var(--mute);cursor:pointer;transition:color .08s}
@@ -57,15 +56,24 @@
   ep.innerHTML = `<header><div class="seg"><i></i><button data-m="ask" class="on">Preguntar</button><button data-m="tutor">Tutor</button></div><button class="x" title="Cerrar" aria-label="Cerrar">✕</button></header>
     <div class="ctx"></div><div class="msgs"></div><div class="sel"><span></span><button type="button" aria-label="Quitar">✕</button></div>
     <form><textarea rows="1" placeholder="Preguntá sobre esta clase"></textarea><button aria-label="Enviar" disabled><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg></button></form>`;
-  const fab = Object.assign(document.createElement('button'), { id: 'ep-fab', textContent: 'Preguntar' });
+  const fab = document.createElement('button');
+  fab.className = 'b'; fab.setAttribute('aria-label', 'Claude');
+  fab.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 3.5h11v7.5H8l-3 2.5V11H2.5z"/></svg><span>Claude</span>';
+  const bar = document.querySelector('nav.bar');
   const askSel = Object.assign(document.createElement('button'), { id: 'ep-ask', textContent: 'Preguntar sobre esto' });
-  document.body.append(ep, fab, askSel);
+  document.body.append(ep, askSel);
+  bar.insertBefore(fab, bar.querySelector('.t').nextSibling);
   const $ = (s) => ep.querySelector(s);
   const hist = { ask: [], tutor: [] };
   let mode = 'ask', selection = '', busy = false;
-  const open = (v) => document.body.classList.toggle('ep-on', v);
-  if (innerWidth >= 1180) open(true);
-  fab.onclick = () => open(true);
+  const open = (v) => {
+    document.body.classList.toggle('ep-on', v); fab.classList.toggle('on', v);
+    if (innerWidth >= 1180) try { localStorage.setItem('ep-off', v ? '0' : '1'); } catch (e) {}
+    if (v) requestAnimationFrame(pill);
+  };
+  let off = false; try { off = localStorage.getItem('ep-off') === '1'; } catch (e) {}
+  open(innerWidth >= 1180 && !off);
+  fab.onclick = () => open(!document.body.classList.contains('ep-on'));
   $('.x').onclick = () => open(false);
 
   function currentLec() {

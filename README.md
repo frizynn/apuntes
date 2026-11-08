@@ -1,6 +1,6 @@
-# apunte-clase
+# apuntes
 
-Convierte una materia en **una sola guía de estudio** (HTML) y te deja estudiarla con Claude al costado.
+Convierte cualquier materia en **una sola guía de estudio** (HTML) y te deja estudiarla con Claude al costado.
 
 ![Guía de estudio con Claude al costado](docs/estudio.jpg)
 
@@ -12,16 +12,18 @@ Es una skill de agente (Claude Code o Codex): el agente sigue `SKILL.md` y usa l
 
 ## Requisitos
 
-- macOS (la OCR y el llavero usan herramientas de macOS)
+- macOS para la OCR de lecturas escaneadas y el llavero (el resto anda en cualquier sistema)
 - Node 20+, Python 3, [pandoc](https://pandoc.org) y poppler (`brew install pandoc poppler`)
 - [Claude Code](https://code.claude.com) instalado y logueado, para el panel de Claude
 - Opcional: Playwright (se instala solo la primera vez) para bajar de Canvas y renderizar PDFs
 
+Las fuentes de cada clase pueden ser cualquier PDF (slides, papers, capítulos), transcripciones en texto, grabaciones de Granola o audio que transcribe `transcribe_groq.sh`. Canvas es opcional.
+
 ## Probalo con el ejemplo
 
 ```sh
-git clone https://github.com/frizynn/apunte-clase
-cd apunte-clase
+git clone https://github.com/frizynn/apuntes
+cd apuntes
 python3 scripts/build_html.py example/apunte    # arma example/Negociacion - Guia de estudio.html
 node scripts/estudio.mjs example/apunte          # abre http://localhost:4317 con Claude al costado
 ```
@@ -30,9 +32,9 @@ Sin el servidor, el HTML se abre igual como archivo: tenés la guía, el índice
 
 ## Usarlo con tu materia
 
-1. Instalá la skill: enlazá esta carpeta en `.claude/skills/apunte-clase` (o `.agents/skills/`) del proyecto donde tenés tus materias.
-2. Creá `<Materia>/apunte/course.json` copiando `example/apunte/course.json`: título, idioma, qué toma el examen y una entrada por clase (slides, lecturas, ID de la grabación de Granola, videos).
-3. Pedile al agente: `/apunte-clase` y "armá la guía de <materia>" o "sumá la clase nueva". Lanza un agente por clase, revisa con `check.sh`, arma la práctica y regenera el HTML.
+1. Instalá la skill: enlazá esta carpeta en `~/.claude/skills/apuntes` (o `.agents/skills/apuntes` de la carpeta donde tenés tus materias).
+2. Creá `<Materia>/apunte/course.json` copiando `example/apunte/course.json`: título, idioma, qué toma el examen y una entrada por clase (slides, lecturas, grabación, videos).
+3. Pedile al agente: `/apuntes` y "armá la guía de <materia>" o "sumá la clase nueva". Lanza un agente por clase, revisa con `check.sh`, arma la práctica y regenera el HTML.
 4. Estudiá con `node scripts/estudio.mjs "<Materia>/apunte"` (podés pasar varias materias).
 
 ## Cómo funciona el panel de Claude
@@ -50,7 +52,7 @@ Sin el servidor, el HTML se abre igual como archivo: tenés la guía, el índice
 SKILL.md                  pasos que sigue el agente
 references/               instrucciones para los agentes que escriben clases y práctica
 scripts/
-  canvas_sync.mjs         baja páginas y archivos de Canvas (credenciales del llavero de macOS)
+  canvas_sync.mjs         opcional: baja páginas y archivos de Canvas (credenciales del llavero de macOS)
   prepare_lecture.py      prepara slides, lecturas (con OCR) y quiz de una clase
   check.sh                chequeos de estilo de una clase
   check_practice.py       valida las preguntas de práctica

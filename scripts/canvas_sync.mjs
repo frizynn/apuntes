@@ -1,13 +1,14 @@
 // Sync a Canvas course into <course_dir>/sources/canvas and optionally pull Panopto audio.
 // Usage: node canvas_sync.mjs <course_dir> [--audio LNN ...]
-// Credentials come from the macOS Keychain (service "canvas.vu.nl"); nothing secret is printed or written.
+// Credentials come from the macOS Keychain (service = host of course.json "canvas", e.g. canvas.vu.nl); nothing
+// secret is printed or written. The login step handles a Microsoft SSO form; other universities may need to adapt it.
 import { createRequire } from 'module';
 import { execFileSync, execSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-const DEPS = path.join(os.homedir(), '.cache', 'apunte-clase');
+const DEPS = path.join(os.homedir(), '.cache', 'apuntes');
 if (!fs.existsSync(path.join(DEPS, 'node_modules', 'playwright'))) {
   fs.mkdirSync(DEPS, { recursive: true });
   execSync('npm install --silent --prefix "' + DEPS + '" playwright@1', { stdio: 'inherit' });
@@ -21,8 +22,9 @@ const out = path.join(courseDir, 'sources', 'canvas');
 for (const d of ['files', 'pages']) fs.mkdirSync(path.join(out, d), { recursive: true });
 
 const secret = (args) => execFileSync('security', ['find-generic-password', ...args, '-w']).toString().trim();
-const user = execFileSync('security', ['find-generic-password', '-s', 'canvas.vu.nl']).toString().match(/"acct"<blob>="([^"]+)"/)[1];
-const pass = secret(['-s', 'canvas.vu.nl']);
+const host = new URL(cfg.canvas).host;
+const user = execFileSync('security', ['find-generic-password', '-s', host]).toString().match(/"acct"<blob>="([^"]+)"/)[1];
+const pass = secret(['-s', host]);
 
 function browserPath() {
   const root = path.join(os.homedir(), 'Library', 'Caches', 'ms-playwright');

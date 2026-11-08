@@ -6,7 +6,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-const DEPS = path.join(os.homedir(), '.cache', 'apunte-clase');
+const DEPS = path.join(os.homedir(), '.cache', 'apuntes');
 for (const dep of ['playwright@1', 'marked@15']) {
   if (!fs.existsSync(path.join(DEPS, 'node_modules', dep.split('@')[0]))) {
     fs.mkdirSync(DEPS, { recursive: true });
