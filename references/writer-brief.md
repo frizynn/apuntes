@@ -53,6 +53,22 @@ study it: a whole course has about 18 lectures. The exam format is in course.jso
 - Skim the headings of the other files in `lectures/` so you do not re-teach a topic another lecture owns; one line plus
   "(see Lecture N)" is enough there.
 
+## One thread (most important for understanding)
+The student's verdict on a version that was short but chopped up: "everything separate, then whole blocks about each
+part; it goes round in circles and I don't understand it". Write the lecture as one continuous explanation:
+- The lecture answers one question (stated in the intro). Each `##` starts from where the previous one left off, in one
+  plain sentence ("Now you know when there is a problem; the next model says where it is").
+- Pick ONE running example per model (the lecture's own case when there is one, otherwise a simple everyday one) and
+  carry it through every part of the model. Explain each part at the moment the example reaches it.
+- Walk a model in one pass, in its own order. Never list the parts first and then explain each part again in a separate
+  block, and never put a block of definitions after the explanation. For each part: what it is in plain words, what
+  happens to the example there, then the exam term in parentheses or bold.
+- Understanding goes in the text; facts to memorise (typologies, extra authors, lists of types) go as short bullets in a
+  "Detalles que pueden preguntar" list inside `## Para el examen`, not in the middle of the explanation.
+- Authors at the end of a sentence, one at most, only when the exam names them.
+- Read your draft as the student: if a paragraph needs the previous one to make sense, it must come right after it; if
+  it repeats something, cut it.
+
 ## Writing (the student's complaints: "hard to read", "too much text", "said in a difficult way", "bold everywhere")
 - Open every `##` section with a one-line callout that anyone would understand: `> **La idea:** ...` (English guides:
   `> **The idea:** ...`). Then explain.

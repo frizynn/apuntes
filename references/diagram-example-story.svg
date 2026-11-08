@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 640" role="img" aria-label="The five steps of Wright and Nishii's process model from top to bottom, each with an example of a monthly feedback talk, and between them the four links with the question each one asks.">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0 1 L9 5 L0 9 z"/></marker>
+  </defs>
+  <rect class="panel" x="0" y="0" width="720" height="640" rx="14"/>
+  <text class="title" x="28" y="42">Seguí una práctica de HR de punta a punta</text>
+  <text class="small" x="300" y="72">Ejemplo: una charla mensual de feedback</text>
+
+  <rect class="box" x="28" y="86" width="248" height="60" rx="10"/>
+  <text class="strong b" x="44" y="112">1. Intended</text><text class="small" x="44" y="132">lo que HR diseña</text>
+  <text class="strong" x="300" y="112">HR planea una charla por mes para</text><text class="strong" x="300" y="132">animar a la gente a probar ideas.</text>
+
+  <path class="line" d="M60 146 V196" marker-end="url(#arr)"/>
+  <text class="acc b" x="78" y="168">implementation</text><text class="small" x="78" y="186">¿se aplica como se diseñó?</text>
+
+  <rect class="box" x="28" y="200" width="248" height="60" rx="10"/>
+  <text class="strong b" x="44" y="226">2. Actual</text><text class="small" x="44" y="246">lo que los jefes hacen</text>
+  <text class="strong" x="300" y="226">La mitad de los jefes no la hace; la</text><text class="strong" x="300" y="246">otra mitad la vuelve un checklist de 5'.</text>
+
+  <path class="line" d="M60 260 V310" marker-end="url(#arr)"/>
+  <text class="acc b" x="78" y="282">communication</text><text class="small" x="78" y="300">¿se entiende como se quería?</text>
+
+  <rect class="acc-fill" x="28" y="314" width="248" height="60" rx="10"/>
+  <text class="strong b" x="44" y="340">3. Perceived</text><text class="small" x="44" y="360">cómo lo ve cada empleado</text>
+  <text class="strong" x="300" y="340">Ana piensa "me controlan".</text><text class="strong" x="300" y="360">Pedro piensa "me quieren ayudar".</text>
+
+  <path class="line" d="M60 374 V424" marker-end="url(#arr)"/>
+  <text class="acc b" x="78" y="396">moderation</text><text class="small" x="78" y="414">¿le afecta igual a todos?</text>
+
+  <rect class="box" x="28" y="428" width="248" height="60" rx="10"/>
+  <text class="strong b" x="44" y="454">4. Reactions</text><text class="small" x="44" y="474">qué siente, aprende o hace</text>
+  <text class="strong" x="300" y="454">Ana arriesga menos.</text><text class="strong" x="300" y="474">Pedro propone ideas nuevas.</text>
+
+  <path class="line" d="M60 488 V538" marker-end="url(#arr)"/>
+  <text class="acc b" x="78" y="510">coordination</text><text class="small" x="78" y="528">¿suma en el grupo?</text>
+
+  <rect class="box" x="28" y="542" width="248" height="60" rx="10"/>
+  <text class="strong b" x="44" y="568">5. Performance</text><text class="small" x="44" y="588">el resultado del equipo</text>
+  <text class="strong" x="300" y="568">Si el trabajo de Pedro depende del de</text><text class="strong" x="300" y="588">Ana, el equipo casi no innova.</text>
+</svg>
