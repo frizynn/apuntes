@@ -7,6 +7,8 @@ Turn any course into **one study guide** (a single HTML page) and study it with 
 - **One guide per course.** An agent per lecture reads the slides, recording, readings and videos and writes the lecture up: concepts explained, slide screenshots, and every study with its question, method, result and what it shows.
 - **Practice.** Each lecture ends with multiple choice (explained once you answer) and open questions with a model answer. A separate mock exam mixes every lecture.
 - **Claude beside you.** Ask about the lecture you are reading or a selected passage; switch to **Tutor**, which first finds out what you already know, then teaches one step at a time and checks each step with a question where you give your answer, how sure you are and your reasoning; and have your open answers graded. It runs on your Claude subscription through [Claude Code](https://code.claude.com), with the model and effort you pick.
+- **Grounded in your material.** Each lecture lists its sources (slides, readings, recordings, clips) with links. In the chat, Claude reads the guide first and digs into the original slides, readings and Granola recordings when the guide is thin, citing file and page.
+- **Edit mode.** Tell the chat what to change ("add Lecture 4 from my Granola recording", "expand this section with the paper", "more practice for Lecture 2"). Claude follows the skill's briefs, reads the material, edits the guide and rebuilds it; you reload to see it.
 
 It is an agent skill (Claude Code or Codex): the agent follows `SKILL.md` and runs the scripts. Each part also works on its own.
 
