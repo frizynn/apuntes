@@ -13,7 +13,9 @@ for f in $files; do
   refs=$(grep -n -i -E '\bthe slides?\b|\bon the slide|\(slide|lecturer|in class\b|the chapter\b|the recording|the transcript|the book says|as the professor|la slide|las slides|en clase|el profesor|la profesora|la grabaci|la transcripci|el libro dice' $f)
   imgs=$(grep -o '!\[[^]]*\](img/[^)]*)' $f | sed 's/.*(\(.*\))/\1/')
   miss=""; big=""; for i in ${(f)imgs}; do
-    if [ -f "$course/$i" ]; then
+    if [ -f "$course/$i" ] && [[ $i == *.svg ]]; then
+      grep -q -E '(fill|stroke)="#|style="' "$course/$i" && big="$big $i(hardcoded colour: use the diagram classes)"
+    elif [ -f "$course/$i" ]; then
       px=$(sips -g pixelWidth -g pixelHeight "$course/$i" | awk '/pixel/{if($2>m)m=$2}END{print m}')
       [ $px -gt $((maxpx + 20)) ] && big="$big $i(${px}px)"
     else miss="$miss $i"; fi

@@ -10,8 +10,9 @@ study it: a whole course has about 18 lectures. The exam format is in course.jso
   in English, so the student must recognise the English terms. Study lines become *Pregunta:* *Método:* *Resultado:*
   *Muestra:* and the closing section is `## Para el examen`.
 - `max_words` and `max_image_px` replace the 2,500 words and 480 px below (`check.sh` reads them).
-- `output_html`: the course is studied from one HTML page, so lean on visuals: 3-6 images per lecture (model diagrams,
-  key slides, result graphs, tables from papers), each explained in the text. Resize with `sips -Z <max_image_px>`.
+- `output_html`: the course is studied as HTML pages, so lean on visuals: 2-4 diagrams drawn by you following
+  `diagram-brief.md` (next to this file), plus 1-3 slide or paper screenshots only where the original figure is the point
+  (a result graph, a famous stimulus). Resize screenshots with `sips -Z <max_image_px>`.
 - `exam`: what the exam covers. If it says methods and findings of articles are not exam material, give each article its
   question, theory and conclusion and keep design and numbers to one line.
 - `kind: "tutorial"`: what was done and asked, the method or framework used, the tutor's feedback, and which theory it
@@ -24,8 +25,9 @@ study it: a whole course has about 18 lectures. The exam format is in course.jso
   meeting notes are a summary and miss things; never write from them alone.
 
 ## Length and priority (most important rule)
-- Aim for 1,800-2,000 words per lecture; hard limit 2,500 (about 5-7 pages with images). Going over 2,000 is for explaining a key model properly (mechanism, how to recognize it), never for extra examples or detail. `check.sh` fails above it. Earlier versions at 3,000
-  words read as dense and padded: the student wants to read it once and understand it.
+- Aim for 1,200-1,800 words per lecture; the hard limit is `max_words`. The student's verdict on 3,500-word versions:
+  "too much text, everything said in a difficult way, I don't understand it". Fewer words, explained better, wins.
+  Going longer is only for explaining a key model properly, never for extra detail, citations or examples.
 - Priority 1 is what the lecture itself covered: every slide topic, study and example, plus what the lecturer explained or
   stressed in the recording. Priority 2 is the book/reader: add only what explains or completes those topics, plus the few
   book-only concepts a multiple-choice question would most likely test, each in a sentence or two. Do not summarise whole chapters.
@@ -51,7 +53,15 @@ study it: a whole course has about 18 lectures. The exam format is in course.jso
 - Skim the headings of the other files in `lectures/` so you do not re-teach a topic another lecture owns; one line plus
   "(see Lecture N)" is enough there.
 
-## Writing (the student's main complaint was "hard to read, filler in between, bold everywhere")
+## Writing (the student's complaints: "hard to read", "too much text", "said in a difficult way", "bold everywhere")
+- Open every `##` section with a one-line callout that anyone would understand: `> **La idea:** ...` (English guides:
+  `> **The idea:** ...`). Then explain.
+- Write for a smart friend who has never heard of the topic: everyday words, sentences under about 20 words, paragraphs
+  of at most 4 sentences. When an everyday situation makes the idea obvious, start with it, then name the concept.
+- Citations stay light: at most one author-year per paragraph, only the one the exam names. No chains of references,
+  no "(see X, 1995; Y, 2001)" lists. Minor authors of a reading can go.
+- Any structure (steps, parts, links, a comparison, a 2x2) goes into a diagram, and the text around it only gives the
+  meaning and one example. Do not describe in prose what the diagram already shows.
 - Every concept follows the same order: (1) a plain-language definition in one sentence with simple words, (2) the
   explanation: why it works or matters, in two to four sentences, (3) at most one intuitive example, only if it helps.
   Understanding first; examples are not decoration.
@@ -102,12 +112,17 @@ Insert as `![Caption saying what to look at](img/LNN/name.jpg)` where it is disc
 coverage per question, images with source page, unverified items. Reply with a 5-line summary.
 
 ## Rewrite mode
-When asked to shorten an existing `lectures/LNN.md`: the existing file is the content source (it was verified against
-slides, recording and readings); do not re-research. Check the slides text `sources/slides/LNN.txt` so no slide topic or
-study is lost, rewrite to this brief, keep the best 1-3 existing images and delete unused ones in `img/LNN/`.
+When asked to rewrite an existing `lectures/LNN.md`: the existing file and its report are the content source (verified
+against slides, recording and readings); open the original sources only to check or clarify something. Check the slides
+text `sources/slides/LNN.txt` so no slide topic or exam point is lost. Rewrite to this brief, add the diagrams, keep only
+the screenshots that still earn their place and delete unused ones in `img/LNN/`. Keep the `##` headings the same when you
+can, because `practice/LNN.json` links to them by text; if you rename or merge one, update every `ref` in that file and
+run `check_practice.py` until it passes.
 Example of the target style:
 
 > ## Brand image
+> > **The idea:** a brand is whatever pops into your head when you hear its name.
+>
 > Brand image is everything people associate with a brand: the ideas that pop up when they hear its name. It lives in
 > the consumer's head, not in the ads; an ad only becomes image if people accept it.
 >

@@ -54,6 +54,23 @@ aside.side a{display:block;color:var(--mute);text-decoration:none;padding:3px 0}
 aside.side .l{font-weight:600;margin-top:10px}aside.side .s{padding-left:10px}
 aside.side .grp:not(.open) .s{display:none}
 aside.side a.on,nav a.on{color:var(--acc)}
+figure.dg{margin:24px 0;padding:18px;border-radius:16px;background:var(--d-bg)}
+figure.dg svg{display:block;width:100%;height:auto;max-height:560px;font-family:inherit}
+figure.dg figcaption{margin-top:10px}
+.dg .panel{fill:var(--d-panel);stroke:none}.dg .box{fill:var(--d-box);stroke:var(--d-stroke);stroke-width:1.5}
+.dg .acc-box{fill:var(--d-box);stroke:var(--d-acc);stroke-width:1.5}.dg .acc-fill{fill:var(--d-acc-fill);stroke:var(--d-acc);stroke-width:1.5}
+.dg .bad-fill{fill:var(--d-bad-fill);stroke:var(--d-bad);stroke-width:1.5}.dg .good-fill{fill:var(--d-good-fill);stroke:var(--d-good);stroke-width:1.5}
+.dg .line{fill:none;stroke:var(--d-stroke);stroke-width:1.5}.dg .acc-line{fill:none;stroke:var(--d-acc);stroke-width:1.5}.dg .dash{stroke-dasharray:4 4}
+.dg .head{fill:var(--d-stroke)}.dg .acc-head{fill:var(--d-acc)}
+.dg text{fill:var(--d-text);font-size:15px}.dg .strong{fill:var(--d-strong)}.dg .title{fill:var(--d-text);font-size:17px;font-weight:600}
+.dg .b{font-weight:600}.dg .acc{fill:var(--d-acc)}.dg .bad{fill:var(--d-bad)}.dg .good{fill:var(--d-good)}.dg .small{font-size:13px}.dg .mid{text-anchor:middle}
+blockquote.idea{border-left-color:var(--acc)}
+body.paged section.lec{display:none}body.paged section.lec.cur{display:block;border-top:0;margin-top:0;padding-top:28px}
+body.paged:not(.at-top) #overview{display:none}
+nav.pager{display:flex;justify-content:space-between;gap:12px;margin:48px 0 0;padding-top:20px;border-top:1px solid var(--line)}
+nav.pager a{display:block;max-width:48%;padding:10px 14px;border-radius:12px;box-shadow:0 0 0 1px var(--line);color:var(--fg);text-decoration:none;font-size:14px;line-height:1.4;transition:background .08s}
+nav.pager a:hover{background:var(--hover)}nav.pager a span{display:block;color:var(--mute);font-size:12px}nav.pager .nx{margin-left:auto;text-align:right}
+body:not(.paged) nav.pager{display:none}
 .srcs{margin-top:32px;font-size:14px;color:var(--mute)}.srcs ul{padding-left:18px}.srcs a{color:var(--fg)}
 .practice{margin-top:40px;border-top:1px dashed var(--line);padding-top:8px}
 .q{background:var(--soft);border-radius:12px;padding:14px 16px;margin:14px 0}
@@ -79,6 +96,13 @@ def embed(m):
     if not p.exists():
         missing.append(rel)
         return m.group(0)
+    if p.suffix.lower() == ".svg":  # diagrams are inlined so they follow the light/dark theme
+        svg = re.sub(r"<\?xml[^>]*>\s*", "", p.read_text())
+        ids = set(re.findall(r'id="([^"]+)"', svg))
+        for i in ids:
+            svg = svg.replace(f'id="{i}"', f'id="{p.stem}-{i}"').replace(f"#{i})", f"#{p.stem}-{i})").replace(f'"#{i}"', f'"#{p.stem}-{i}"')
+        svg = re.sub(r"\n\s*\n", "\n", svg).strip()
+        return f'\n\n<figure class="dg">{svg}<figcaption>{html.escape(alt)}</figcaption></figure>\n\n'
     mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
     return f"![{alt}](data:{mime};base64,{base64.b64encode(p.read_bytes()).decode()})"
 
@@ -155,6 +179,13 @@ for f in files:
                     f'<h2>{html.escape(title)}</h2>\n{frag}</section>')
     toc.append(f'<li><a href="#{key}">{html.escape(title)}</a><span>{html.escape(", ".join(subs[:5]))}</span></li>')
 
+keys = [re.search(r'id="(l\d+)"', x).group(1) for x in sections]
+titles = {k: re.search(r"<h2>(.*?)</h2>", x).group(1) for k, x in zip(keys, sections)}
+for i, k in enumerate(keys):
+    prev = f'<a href="#{keys[i-1]}"><span>&larr; Previous</span>{titles[keys[i-1]]}</a>' if i else '<a href="#top"><span>&larr; Overview</span>Contents</a>'
+    nxt = f'<a class="nx" href="#{keys[i+1]}"><span>Next &rarr;</span>{titles[keys[i+1]]}</a>' if i + 1 < len(keys) else ''
+    sections[i] = sections[i].replace("</section>", f'<nav class="pager">{prev}{nxt}</nav></section>')
+
 page = f"""<!doctype html>
 <html lang="{cfg.get('language', 'en')}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -162,13 +193,13 @@ page = f"""<!doctype html>
 <style>{CSS}</style>
 <script>try{{const t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}}catch(e){{}}</script></head>
 <body>
-<nav class="bar"><span id="barl"></span><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#exam"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="themebtn" aria-label="Theme" title="Light or dark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg></button><button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
-<main id="top">
+<nav class="bar"><span id="barl"></span><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#exam"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="viewbtn" aria-label="Page by page or one long page" title="Page by page or one long page"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="2.5" width="10" height="11" rx="1.5"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" stroke-linecap="round"/></svg></button><button class="b" id="themebtn" aria-label="Theme" title="Light or dark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg></button><button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
+<main id="top"><div id="overview">
 <h1>{html.escape(cfg['title'])}</h1>
 <p class="lead">{UI[1].format(n=len(files), d=date.today().strftime('%d/%m/%Y'))}</p>
 <div class="toc"><p class="when">{UI[2]}</p><ol>
 {chr(10).join(toc)}
-</ol></div>
+</ol></div></div>
 {chr(10).join(sections)}
 </main>
 {f'''<div id="exam" hidden><a class="back" href="#top">&larr; {UI[0]}</a><h1>{UI[5]}</h1><p class="lead">{UI[13]}</p>
@@ -187,7 +218,7 @@ document.querySelector('aside.side').addEventListener('click',e=>{{if(e.target.c
 addEventListener('resize',tocSync);tocSync();
 const targets=[...document.querySelectorAll('section.lec, section.lec h3')];
 function spy(){{
-  let cur=null;for(const t of targets){{if(t.getBoundingClientRect().top<innerHeight*0.35)cur=t;else break;}}
+  let cur=null;for(const t of targets){{if(getComputedStyle(t.closest('section.lec')).display==='none')continue;if(t.getBoundingClientRect().top<innerHeight*0.35)cur=t;else break;}}
   const sec=cur?(cur.closest('section.lec')||cur):null;
   links.forEach(a=>{{const id=a.getAttribute('href').slice(1);a.classList.toggle('on',!!cur&&(id===cur.id||(id===sec.id&&!a.classList.contains('l')&&a.closest('nav'))))}});
   document.querySelectorAll('aside.side .grp').forEach(g=>{{const o=!!sec&&g.dataset.sec===sec.id;g.classList.toggle('open',o);g.querySelector('.l').classList.toggle('on',o)}});
@@ -216,10 +247,20 @@ document.querySelectorAll('.pr').forEach(b=>{{const p=P[b.dataset.lec];fill(b,p.
 function shuffle(a){{a=a.slice();for(let i=a.length-1;i>0;i--){{const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}return a;}}
 function sim(){{const all=Object.values(P);fill(document.getElementById('sim'),shuffle(all.flatMap(p=>p.mc||[])).slice(0,20),shuffle(all.flatMap(p=>p.open||[])).slice(0,2));}}
 const nb=document.getElementById('newsim');if(nb)nb.onclick=()=>{{sim();scrollTo(0,0);}};
-const ex=document.getElementById('exam');let pos=0;
-function route(){{if(!ex)return;const on=location.hash==='#exam';if(on&&!document.body.classList.contains('exam'))pos=scrollY;
-  document.body.classList.toggle('exam',on);ex.hidden=!on;document.querySelector('nav.bar a[href="#exam"]')?.classList.toggle('on',on);
-  if(on){{if(!document.getElementById('sim').children.length)sim();scrollTo(0,0);}}else if(location.hash==='#top'||!location.hash)scrollTo(0,pos);}}
+const ex=document.getElementById('exam'),vb=document.getElementById('viewbtn');let pos=0,curSec=null;
+let paged=true;try{{paged=localStorage.getItem('view')!=='scroll'}}catch(e){{}}
+function route(){{
+  const id=decodeURIComponent(location.hash.slice(1)),onEx=id==='exam';
+  if(ex){{if(onEx&&!document.body.classList.contains('exam'))pos=scrollY;document.body.classList.toggle('exam',onEx);ex.hidden=!onEx;document.querySelector('nav.bar a[href="#exam"]')?.classList.toggle('on',onEx);}}
+  document.body.classList.toggle('paged',paged);vb.classList.toggle('on',paged);
+  if(onEx){{if(!document.getElementById('sim').children.length)sim();scrollTo(0,0);return;}}
+  const el=id&&id!=='top'?document.getElementById(id):null,sec=el?(el.closest('section.lec')||null):null;
+  document.querySelectorAll('section.lec').forEach(s=>s.classList.toggle('cur',s===sec));
+  document.body.classList.toggle('at-top',!sec);
+  if(paged){{if(!el||el===sec){{if(sec!==curSec||!el)scrollTo(0,0);}}else el.scrollIntoView();}}else if(el)el.scrollIntoView();else if(!id||id==='top')scrollTo(0,0);
+  curSec=sec;spy();
+}}
+vb.onclick=()=>{{paged=!paged;try{{localStorage.setItem('view',paged?'page':'scroll')}}catch(e){{}}route();}};
 addEventListener('hashchange',route);route();
 </script>
 </body></html>

@@ -161,7 +161,7 @@
   function currentLec() {
     if (HOME) return null;
     let cur = null;
-    for (const s of document.querySelectorAll('section.lec[id^="l"]')) if (s.getBoundingClientRect().top < innerHeight * 0.4) cur = s;
+    for (const s of document.querySelectorAll('section.lec[id^="l"]')) if (getComputedStyle(s).display !== 'none' && s.getBoundingClientRect().top < innerHeight * 0.4) cur = s;
     return cur;
   }
   const showCtx = () => { const s = currentLec(); $('.ctx').textContent = s ? s.querySelector('h2').textContent : 'Scroll to a lecture to ask about it'; };

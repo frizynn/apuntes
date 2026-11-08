@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-label="Five boxes in a row joined by arrows: intended, actual and perceived HR practices, employee reactions, performance. Four labels name the links between them.">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head" d="M0 1 L9 5 L0 9 z"/></marker>
+    <marker id="arr-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="acc-head" d="M0 1 L9 5 L0 9 z"/></marker>
+  </defs>
+  <rect class="panel" x="0" y="0" width="720" height="300" rx="14"/>
+  <text class="title" x="28" y="42">Where the HR chain can break</text>
+
+  <rect class="box" x="24" y="96" width="116" height="64" rx="10"/>
+  <text class="strong mid" x="82" y="124">Intended</text><text class="small mid" x="82" y="144">what HR designs</text>
+  <rect class="box" x="164" y="96" width="116" height="64" rx="10"/>
+  <text class="strong mid" x="222" y="124">Actual</text><text class="small mid" x="222" y="144">what managers do</text>
+  <rect class="acc-fill" x="304" y="96" width="116" height="64" rx="10"/>
+  <text class="strong mid" x="362" y="124">Perceived</text><text class="small mid" x="362" y="144">what staff see</text>
+  <rect class="box" x="444" y="96" width="116" height="64" rx="10"/>
+  <text class="strong mid" x="502" y="124">Reactions</text><text class="small mid" x="502" y="144">attitudes, effort</text>
+  <rect class="box" x="584" y="96" width="112" height="64" rx="10"/>
+  <text class="strong mid" x="640" y="124">Performance</text><text class="small mid" x="640" y="144">unit results</text>
+
+  <path class="line" d="M140 128 H162" marker-end="url(#arr)"/>
+  <path class="acc-line" d="M280 128 H302" marker-end="url(#arr-acc)"/>
+  <path class="line" d="M420 128 H442" marker-end="url(#arr)"/>
+  <path class="line" d="M560 128 H582" marker-end="url(#arr)"/>
+
+  <text class="small mid" x="151" y="196">implementation</text>
+  <text class="small mid acc b" x="291" y="196">communication</text>
+  <text class="small mid" x="431" y="196">moderation</text>
+  <text class="small mid" x="571" y="196">aggregation</text>
+
+  <rect class="acc-fill" x="164" y="230" width="392" height="44" rx="10"/>
+  <text class="strong mid" x="360" y="257">People react to what they see, not to what HR wrote</text>
+</svg>
