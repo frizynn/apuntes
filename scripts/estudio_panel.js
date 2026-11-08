@@ -14,9 +14,6 @@
   #ep .seg i{position:absolute;top:2px;bottom:2px;left:0;border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 .5px rgba(0,0,0,.06);transition:transform .16s cubic-bezier(.2,0,0,1),width .16s cubic-bezier(.2,0,0,1)}
   #ep .ic{margin-left:auto;width:28px;height:28px;border:0;background:none;border-radius:8px;color:var(--mute);cursor:pointer;display:grid;place-items:center}
   #ep .ic:hover{background:rgba(0,0,0,.04);color:var(--fg)}
-  #ep .opts{display:flex;gap:4px;padding:0 12px 6px}
-  #ep select{height:26px;border:0;border-radius:7px;background:#f4f4f3;color:var(--mute);font:inherit;font-size:12px;padding:0 6px;cursor:pointer}
-  #ep select:hover{color:var(--fg)}
   #ep .ctx{padding:0 16px 8px;color:var(--mute);font-size:12px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 0 var(--line)}
   #ep .plan{display:none;padding:8px 16px;font-size:12px;line-height:18px;box-shadow:0 1px 0 var(--line);color:var(--mute)}
   #ep .plan.show{display:block}#ep .plan ol{margin:0;padding-left:18px}#ep .plan li.cur{color:var(--fg);font-weight:550}#ep .plan li.done{text-decoration:line-through}
@@ -49,9 +46,17 @@
   #ep .sel button{border:0;background:none;color:var(--mute);cursor:pointer}
   #ep form{position:relative;margin:0 12px 12px;border-radius:14px;background:#fff;box-shadow:0 0 0 1px var(--line),0 1px 1px rgba(0,0,0,.04);transition:box-shadow .08s}
   #ep form:hover{box-shadow:0 0 0 1px #dcdad5,0 1px 1px rgba(0,0,0,.04)}#ep form:focus-within{box-shadow:0 0 0 1px rgba(31,30,29,.25),0 1px 1px rgba(0,0,0,.04)}
-  #ep form textarea{display:block;width:100%;border:0;outline:0;background:none;resize:none;font:inherit;font-size:14px;line-height:20px;padding:10px 48px 10px 12px;max-height:200px}
+  #ep form textarea{display:block;width:100%;border:0;outline:0;background:none;resize:none;font:inherit;font-size:14px;line-height:20px;padding:10px 12px 2px;max-height:200px}
+  #ep form .row{display:flex;align-items:center;gap:0;padding:2px 6px 6px}
+  #ep .pick{height:26px;padding:0 7px;border:0;background:none;border-radius:7px;color:var(--mute);font:inherit;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;transition:background .08s,color .08s}
+  #ep .pick:hover,#ep .pick.on{background:rgba(0,0,0,.04);color:var(--fg)}#ep .pick svg{width:10px;height:10px;opacity:.6}
+  #ep .menu{position:absolute;left:6px;bottom:calc(100% + 6px);z-index:3;min-width:200px;background:#fff;border-radius:12px;padding:4px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 10px 28px rgba(0,0,0,.12);animation:ep-pop .12s cubic-bezier(.2,0,0,1);transform-origin:bottom left}
+  #ep .menu button{display:flex;width:100%;align-items:baseline;gap:8px;border:0;background:none;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;color:var(--fg);cursor:pointer;text-align:left}
+  #ep .menu button:hover{background:rgba(0,0,0,.04)}#ep .menu small{color:var(--mute);font-size:12px;margin-left:auto}
+  #ep .menu button.on{font-weight:550}
+  @keyframes ep-pop{from{opacity:0;transform:scale(.96) translateY(4px)}}
   @media (pointer:coarse){#ep textarea{font-size:16px!important}}
-  #ep form .send{position:absolute;right:6px;bottom:6px;width:30px;height:30px;border:0;border-radius:15px;background:var(--fg);color:#fff;cursor:pointer;display:grid;place-items:center}
+  #ep form .send{margin-left:auto;width:30px;height:30px;border:0;border-radius:15px;background:var(--fg);color:#fff;cursor:pointer;display:grid;place-items:center}
   #ep form .send:disabled{opacity:.25;cursor:default}
   #ep-ask{position:absolute;z-index:9;display:none;height:28px;padding:0 12px;border:0;border-radius:14px;background:var(--fg);color:#fff;font:inherit;font-size:12px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15)}
   `;
@@ -85,10 +90,8 @@
   ep.id = 'ep';
   ep.innerHTML = `<div class="hd"><div class="seg"><i></i><button data-m="ask" class="on">Ask</button><button data-m="tutor">Tutor</button><button data-m="edit">Edit</button></div>
       <button class="ic" data-act="new" title="New chat" aria-label="New chat">${icon('<path d="M8 3.5v9M3.5 8h9"/>')}</button></div>
-    <div class="opts"><select data-k="model" aria-label="Model"><option value="haiku">Haiku</option><option value="sonnet">Sonnet</option><option value="opus">Opus</option></select>
-      <select data-k="effort" aria-label="Effort"><option value="low">Low effort</option><option value="medium">Medium effort</option><option value="high">High effort</option><option value="xhigh">Extra high effort</option></select></div>
     <div class="ctx"></div><div class="plan"></div><div class="msgs"></div><div class="sel"><span></span><button type="button" aria-label="Clear">✕</button></div>
-    <form><textarea rows="1" placeholder="Ask about this lecture"></textarea><button class="send" aria-label="Send" disabled>${icon('<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>')}</button></form>`;
+    <form><textarea rows="1" placeholder="Ask about this lecture"></textarea><div class="row"><button type="button" class="pick" data-k="model"></button><button type="button" class="pick" data-k="effort"></button><button class="send" aria-label="Send" disabled>${icon('<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>')}</button></div></form>`;
   const toggle = document.createElement('button');
   toggle.className = 'b'; toggle.title = 'Chat'; toggle.setAttribute('aria-label', 'Chat');
   toggle.innerHTML = icon('<rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M6 2.5v11"/>') + '<span>Chat</span>';
@@ -105,7 +108,33 @@
   const hist = { ask: store.get(course + ':ask', []), tutor: store.get(course + ':tutor', []), edit: store.get(course + ':edit', []) };
   const save = () => { for (const k in hist) store.set(course + ':' + k, hist[k].slice(-60)); };
   let mode = store.get('mode', 'ask'), selection = '', busy = null;
-  ep.querySelectorAll('select').forEach((s) => { s.value = store.get(s.dataset.k, s.dataset.k === 'model' ? 'sonnet' : 'medium'); s.onchange = () => store.set(s.dataset.k, s.value); });
+  const CHOICES = {
+    model: [['haiku', 'Haiku', 'fastest'], ['sonnet', 'Sonnet', 'balanced'], ['opus', 'Opus', 'deepest']],
+    effort: [['low', 'Low', 'quick'], ['medium', 'Medium', 'default'], ['high', 'High', 'thinks more'], ['xhigh', 'Extra high', 'slowest']],
+  };
+  const pickVal = { model: store.get('model', 'sonnet'), effort: store.get('effort', 'medium') };
+  const caret = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4 5 6.5 7.5 4"/></svg>';
+  let menu = null;
+  const closeMenu = () => { menu?.remove(); menu = null; ep.querySelectorAll('.pick').forEach((b) => b.classList.remove('on')); };
+  function paintPicks() {
+    ep.querySelectorAll('.pick').forEach((b) => {
+      const k = b.dataset.k, c = CHOICES[k].find((x) => x[0] === pickVal[k]) || CHOICES[k][1];
+      b.innerHTML = (k === 'effort' ? c[1] + ' effort' : c[1]) + caret;
+    });
+  }
+  ep.querySelectorAll('.pick').forEach((b) => (b.onclick = (e) => {
+    e.stopPropagation();
+    const was = menu && menu.dataset.k === b.dataset.k; closeMenu(); if (was) return;
+    const k = b.dataset.k;
+    menu = document.createElement('div'); menu.className = 'menu'; menu.dataset.k = k;
+    menu.style.left = b.offsetLeft + 'px';
+    menu.innerHTML = CHOICES[k].map(([v, l, d]) => `<button type="button" data-v="${v}" class="${v === pickVal[k] ? 'on' : ''}">${l}<small>${d}</small></button>`).join('');
+    menu.querySelectorAll('button').forEach((x) => (x.onclick = () => { pickVal[k] = x.dataset.v; store.set(k, x.dataset.v); paintPicks(); closeMenu(); ta.focus(); }));
+    $('form').append(menu); b.classList.add('on');
+  }));
+  document.addEventListener('click', (e) => { if (menu && !menu.contains(e.target)) closeMenu(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+  paintPicks();
 
   const open = (v) => {
     document.body.classList.toggle('ep-on', v); toggle.classList.toggle('on', v);
@@ -228,7 +257,7 @@
     }
     return all;
   }
-  const opts = () => ({ model: $('[data-k=model]').value, effort: $('[data-k=effort]').value });
+  const opts = () => ({ ...pickVal });
 
   const ta = $('form textarea'), sendBtn = $('form .send');
   const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 200) + 'px'; sendBtn.disabled = !ta.value.trim() || !!busy; };
@@ -252,18 +281,31 @@
     let stick = true;
     const onScroll = () => setTimeout(() => { stick = box.scrollHeight - box.scrollTop - box.clientHeight < 40; }, 50);
     box.addEventListener('wheel', onScroll, { passive: true }); box.addEventListener('touchmove', onScroll, { passive: true });
+    // Text arrives in bursts; reveal it at a steady, calm pace that eases to catch up with what has arrived.
+    let target = '', shown = 0, done = false, drained;
+    const drain = new Promise((r) => (drained = r));
+    const tick = () => {
+      const backlog = target.length - shown;
+      if (backlog > 0) {
+        shown += Math.min(backlog, Math.max(1, Math.round(backlog / 24)));
+        reply.content = target.slice(0, shown); fillAssistant(node, reply, true);
+        if (stick) box.scrollTop = box.scrollHeight;
+      }
+      if (done && shown >= target.length) drained(); else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
     try {
       reply.tools = [];
       await stream({ mode: m, lec: s ? s.id : null, selection: sel, messages: h.slice(0, -1).map(({ role, content }) => ({ role, content })), ...opts() }, (t) => {
-        reply.content = t; fillAssistant(node, reply, true);
-        if (stick) box.scrollTop = box.scrollHeight;
+        target = t;
       }, busy.signal, (ev) => {
         if (ev.t === 'tool') reply.tools.push(ev.d);
         if (ev.t === 'rebuilt') reply.rebuilt = true;
         fillAssistant(node, reply, true);
         if (stick) box.scrollTop = box.scrollHeight;
       });
-    } catch (err) { if (err.name !== 'AbortError') reply.content = 'Could not reach Claude: ' + err.message; }
+    } catch (err) { if (err.name !== 'AbortError') target += (target ? '\n\n' : '') + 'Could not reach Claude: ' + err.message; else shown = target.length; }
+    done = true; await drain; reply.content = target;
     box.removeEventListener('wheel', onScroll); box.removeEventListener('touchmove', onScroll);
     busy = null; fillAssistant(node, reply, false); renderPlan(); save(); grow();
     if (stick) box.scrollTop = box.scrollHeight;
