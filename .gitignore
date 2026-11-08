@@ -1,0 +1,8 @@
+__pycache__/
+.DS_Store
+node_modules/
+# Generated or copyrighted course material never goes in this repo
+*/apunte/sources/
+*/apunte/img/
+*/apunte/reports/
+example/*.html

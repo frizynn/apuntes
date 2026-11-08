@@ -1,0 +1,11 @@
+{
+ "title": "Negociación (ejemplo)",
+ "language": "es",
+ "output_html": "Negociacion - Guia de estudio.html",
+ "max_words": 3500,
+ "max_image_px": 1000,
+ "exam": "Examen escrito con multiple choice y preguntas abiertas de aplicación a casos.",
+ "lectures": {
+  "01": {"title": "Lecture 1: BATNA y punto de reserva", "date": "2026-01-15", "kind": "lecture"}
+ }
+}
