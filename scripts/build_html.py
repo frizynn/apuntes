@@ -15,14 +15,17 @@ files = sorted((course / "lectures").glob("L*.md"))
 missing = []
 
 CSS = """
-:root{--fg:#1f1e1d;--mute:#6b6a68;--line:#ebe9e4;--soft:#f7f6f3;--acc:#c96442}
+:root{--bg:#fff;--fg:#1f1e1d;--mute:#6b6a68;--line:#ebe9e4;--line2:#dcdad5;--soft:#f7f6f3;--card:#fafaf9;--seg:#f4f4f3;--surface:#fff;--acc:#c96442;--on-fg:#fff;--hover:rgba(0,0,0,.04);--hover2:rgba(0,0,0,.06);--bar:rgba(255,255,255,.92);--ok:#2f8f5b;--ok-bg:#eef8f2;--bad:#c0392b;--bad-bg:#fbeeed;--shadow:rgba(0,0,0,.12);color-scheme:light}
+:root[data-theme=dark]{--bg:#191918;--fg:#ebe9e4;--mute:#9b9892;--line:#2e2d2a;--line2:#3d3c38;--soft:#222120;--card:#1f1f1d;--seg:#2a2927;--surface:#262523;--acc:#e0805c;--on-fg:#191918;--hover:rgba(255,255,255,.06);--hover2:rgba(255,255,255,.09);--bar:rgba(25,25,24,.88);--ok:#5cc08b;--ok-bg:#1d3226;--bad:#e8705f;--bad-bg:#3b2320;--shadow:rgba(0,0,0,.5);color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#191918;--fg:#ebe9e4;--mute:#9b9892;--line:#2e2d2a;--line2:#3d3c38;--soft:#222120;--card:#1f1f1d;--seg:#2a2927;--surface:#262523;--acc:#e0805c;--on-fg:#191918;--hover:rgba(255,255,255,.06);--hover2:rgba(255,255,255,.09);--bar:rgba(25,25,24,.88);--ok:#5cc08b;--ok-bg:#1d3226;--bad:#e8705f;--bad-bg:#3b2320;--shadow:rgba(0,0,0,.5);color-scheme:dark}}
+figure img,p img{background:#fff}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
-body{margin:0;background:#fff;color:var(--fg);font:16px/1.65 "Anthropic Sans","Styrene B","Söhne",Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Anthropic Sans","Styrene B","Söhne",Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 main{max-width:740px;margin:0 auto;padding:32px 16px 96px}
-nav.bar{position:sticky;top:0;z-index:8;height:48px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 1px 0 var(--line);display:flex;align-items:center;gap:4px;padding:0 10px;font-size:13px}
+nav.bar{position:sticky;top:0;z-index:8;height:48px;background:var(--bar);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 1px 0 var(--line);display:flex;align-items:center;gap:4px;padding:0 10px;font-size:13px}
 nav.bar .t{flex:1;min-width:0;padding:0 6px;font-weight:550;font-size:14px;color:var(--fg);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 nav.bar .b{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--mute);font:inherit;font-size:13px;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .08s,color .08s}
-nav.bar .b:hover{background:rgba(0,0,0,.04);color:var(--fg)}nav.bar .b.on{background:rgba(0,0,0,.06);color:var(--fg)}
+nav.bar .b:hover{background:var(--hover);color:var(--fg)}nav.bar .b.on{background:var(--hover2);color:var(--fg)}
 nav.bar svg{width:16px;height:16px;flex:none}
 @media (max-width:520px){nav.bar .b span{display:none}nav.bar .b{padding:0 8px}}
 h1{font-size:28px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
@@ -48,7 +51,7 @@ section.lec h3,section.lec h4{scroll-margin-top:52px}
 .kind{display:inline-block;font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:20px;padding:1px 9px;margin-bottom:8px}
 aside.side{display:none;font-size:13px;line-height:1.4}
 @media (min-width:1180px){body:not(.toc-off) aside.side{display:block;position:fixed;top:68px;right:24px;width:270px;max-height:calc(100vh - 92px);overflow-y:auto;padding-left:12px;box-shadow:-1px 0 0 var(--line)}}
-@media (max-width:1179px){body.toc-open aside.side{display:block;position:fixed;z-index:9;top:48px;left:0;right:0;bottom:0;overflow-y:auto;background:#fff;padding:12px 20px 40px}body.toc-open aside.side .grp .s{display:block}}
+@media (max-width:1179px){body.toc-open aside.side{display:block;position:fixed;z-index:9;top:48px;left:0;right:0;bottom:0;overflow-y:auto;background:var(--bg);padding:12px 20px 40px}body.toc-open aside.side .grp .s{display:block}}
 aside.side a{display:block;color:var(--mute);text-decoration:none;padding:3px 0}aside.side a:hover{color:var(--fg)}
 aside.side .l{font-weight:600;margin-top:10px}aside.side .s{padding-left:10px}
 aside.side .grp:not(.open) .s{display:none}
@@ -57,18 +60,18 @@ aside.side a.on,nav a.on{color:var(--acc)}
 .practice{margin-top:40px;border-top:1px dashed var(--line);padding-top:8px}
 .q{background:var(--soft);border-radius:12px;padding:14px 16px;margin:14px 0}
 .q .qt{margin:0 0 10px;font-weight:500}
-.opts button{display:block;width:100%;text-align:left;font:inherit;font-size:15px;color:var(--fg);background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:6px 0;cursor:pointer}
+.opts button{display:block;width:100%;text-align:left;font:inherit;font-size:15px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:6px 0;cursor:pointer}
 .opts button:hover:not(:disabled){border-color:var(--mute)}
 .opts button:disabled{cursor:default}
-.opts button.ok{border-color:#2f8f5b;background:#eef8f2}.opts button.bad{border-color:#c0392b;background:#fbeeed}
+.opts button.ok{border-color:var(--ok);background:var(--ok-bg)}.opts button.bad{border-color:var(--bad);background:var(--bad-bg)}
 .why{margin-top:10px;font-size:15px}.why a,.q details a{color:var(--acc)}
-.q textarea{width:100%;min-height:110px;font:inherit;font-size:15px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:4px 0 8px;background:#fff}
+.q textarea{width:100%;min-height:110px;font:inherit;font-size:15px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:4px 0 8px;background:var(--surface);color:var(--fg)}
 .q summary{cursor:pointer;color:var(--acc);font-size:15px}
 .score{color:var(--mute);font-size:14px}
-.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;cursor:pointer}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:20px;padding:6px 14px;cursor:pointer}
 #exam{max-width:740px;margin:0 auto;padding:28px 16px 96px}#exam .back{display:inline-block;color:var(--mute);text-decoration:none;font-size:14px;margin-bottom:16px}#exam .back:hover{color:var(--fg)}
 body.exam main,body.exam aside.side,body.exam .top{display:none!important}
-.top{position:fixed;right:16px;bottom:16px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;color:var(--mute);text-decoration:none}
+.top{position:fixed;right:16px;bottom:16px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:13px;color:var(--mute);text-decoration:none}
 """
 
 
@@ -158,9 +161,10 @@ page = f"""<!doctype html>
 <html lang="{cfg.get('language', 'en')}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(cfg['title'])}</title>
-<style>{CSS}</style></head>
+<style>{CSS}</style>
+<script>try{{const t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}}catch(e){{}}</script></head>
 <body>
-<nav class="bar"><span id="barl"></span><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#exam"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
+<nav class="bar"><span id="barl"></span><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#exam"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="themebtn" aria-label="Theme" title="Light or dark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg></button><button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
 <main id="top">
 <h1>{html.escape(cfg['title'])}</h1>
 <p class="lead">{UI[1].format(n=len(files), d=date.today().strftime('%d/%m/%Y'))}</p>
@@ -175,6 +179,8 @@ page = f"""<!doctype html>
 <a class="top" href="#top">{UI[3]}</a>
 <script>
 const links=[...document.querySelectorAll('aside.side a')];
+const thb=document.getElementById('themebtn');
+thb.onclick=()=>{{const dark=getComputedStyle(document.documentElement).colorScheme==='dark';const t=dark?'light':'dark';document.documentElement.dataset.theme=t;try{{localStorage.setItem('theme',t)}}catch(e){{}}}};
 const tb=document.getElementById('tocbtn'),wide=()=>innerWidth>=1180;
 let tocOff=false;try{{tocOff=localStorage.getItem('toc-off')==='1'}}catch(e){{}}
 function tocSync(){{document.body.classList.toggle('toc-off',tocOff);tb.classList.toggle('on',wide()?!tocOff:document.body.classList.contains('toc-open'))}}
