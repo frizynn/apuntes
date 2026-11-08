@@ -30,6 +30,7 @@ function discover() {
   const dirs = [];
   for (const a of ARGS) {
     if (fs.existsSync(path.join(a, 'course.json'))) { dirs.push(a); continue; }
+    if (fs.existsSync(path.join(a, 'apunte', 'course.json'))) dirs.push(path.join(a, 'apunte'));
     for (const d of fs.readdirSync(a, { withFileTypes: true })) {
       if (d.isDirectory() && !d.name.startsWith('.') && fs.existsSync(path.join(a, d.name, 'apunte', 'course.json'))) dirs.push(path.join(a, d.name, 'apunte'));
     }
@@ -60,9 +61,9 @@ function outline(c) {
 const STYLE = 'Reply in the language the student writes in (default: the language of the guide). Plain, direct, short sentences; if replying in Spanish use "vos". Give exam terms in English the first time, with their meaning. No em dashes. Format: short paragraphs, "- " lists only for real lists, **bold** only for the key term.';
 const QUIZ = `To ask the student a question, end your message with exactly one fenced block and nothing after it:
 \`\`\`quiz
-{"q": "question text", "options": ["option A", "option B", "option C", "option D"]}
+{"q": "question text", "options": ["option A", "option B", "option C", "option D"], "answer": 1, "why": "one or two sentences: why the right option is right and the tempting one is wrong"}
 \`\`\`
-Use 3-4 options when there is a clear answer to choose; omit "options" for an open question (the student writes the answer). Never reveal the correct answer in the block or before the student answers. Do not repeat the question in your prose: the block shows it. The student replies with their answer, a confidence (probability 0-100 that it is right, absent if they said "I don't know") and optionally their reasoning. Read confidence against correctness: right and confident = held, move on; right but unsure = fragile, one reinforcing touch; wrong and confident = a committed misconception, name it and repair it before anything else; wrong and unsure or "I don't know" = an honest gap, a small correction. Use their reasoning to find exactly where the thinking broke.`;
+Use 3-4 options when there is a clear answer, with "answer" (0-based index of the right option) and "why": the page hides both and shows the student right or wrong the moment they pick. For a goal or topic question with no right answer, leave out "answer" and "why". Omit "options" for an open question (the student writes the answer). Never reveal the answer in your prose. Do not repeat the question in your prose: the block shows it. The student replies with their answer, a confidence (probability 0-100 that it is right, absent if they said "I don't know") and optionally their reasoning. Read confidence against correctness: right and confident = held, move on; right but unsure = fragile, one reinforcing touch; wrong and confident = a committed misconception, name it and repair it before anything else; wrong and unsure or "I don't know" = an honest gap, a small correction. Use their reasoning to find exactly where the thinking broke.`;
 const SYSTEM = {
   ask: (c) => `You are the tutor for the course "${c.cfg.title}". ${STYLE} Answer from the study guide first (below, inside <guide>). If the answer is not in the guide, say so in one line and then answer from general knowledge, marked as such. Never invent studies, authors or numbers. Keep it brief: just enough to understand, with one example if it helps. Exam: ${c.cfg.exam || ''}`,
   tutor: (c) => `You are a one-to-one tutor for the course "${c.cfg.title}". Your goal: the student ends up holding the chosen topic of the lecture in <guide> as obviously true, not memorised. ${STYLE}

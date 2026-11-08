@@ -4,20 +4,22 @@
   if (!E) return;
   const HOME = !!E.home; // mounted inline on the workspace home instead of as the guide's sidebar
   const css = `
-  #ep{position:fixed;z-index:7;top:48px;left:0;bottom:0;width:380px;background:var(--bg);display:flex;flex-direction:column;font-size:14px;line-height:20px;box-shadow:1px 0 0 var(--line);transform:translateX(-100%);visibility:hidden;transition:transform .16s cubic-bezier(.2,0,0,1),visibility 0s .16s}
-  body.ep-on #ep{transform:none;visibility:visible;transition:transform .16s cubic-bezier(.2,0,0,1)}
-  @media (min-width:1180px){body.ep-on main{margin-left:max(404px,calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - 404px - 310px))}body.ep-on.toc-off main{max-width:min(740px,calc(100vw - 428px))}body.ep-on #exam{margin-left:max(404px,calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - 428px))}}
+  #ep{position:fixed;z-index:7;top:48px;left:0;bottom:0;width:var(--ep-w,380px);background:var(--bg);display:flex;flex-direction:column;font-size:14px;line-height:20px;box-shadow:1px 0 0 var(--line);transform:translateX(-100%);visibility:hidden;transition:transform .22s cubic-bezier(.2,0,0,1),width .26s cubic-bezier(.2,0,0,1),visibility 0s .22s}
+  body.ep-on #ep{transform:none;visibility:visible;transition:transform .22s cubic-bezier(.2,0,0,1),width .26s cubic-bezier(.2,0,0,1)}
+  body.ep-full #ep{width:100vw}body.ep-full #ep .msgs>*,body.ep-full #ep form,body.ep-full #ep .hd,body.ep-full #ep .plan{width:min(760px,100% - 32px);margin-left:auto;margin-right:auto}
+  body.ep-drag #ep,body.ep-drag main,body.ep-drag #exam{transition:none!important;user-select:none}
+  main,#exam{transition:margin-left .26s cubic-bezier(.2,0,0,1),max-width .26s cubic-bezier(.2,0,0,1)}
+  #ep .rs{position:absolute;top:0;right:-4px;bottom:0;width:8px;cursor:col-resize;z-index:2}#ep .rs:hover,body.ep-drag #ep .rs{background:linear-gradient(90deg,transparent 3px,var(--acc) 3px,var(--acc) 5px,transparent 5px)}
+  body.ep-full #ep .rs,#ep.inline .rs{display:none}
+  @media (min-width:1180px){body.ep-on main{margin-left:max(calc(var(--ep-w,380px) + 24px),calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - var(--ep-w,380px) - 334px))}body.ep-on.toc-off main{max-width:min(740px,calc(100vw - var(--ep-w,380px) - 48px))}body.ep-on #exam{margin-left:max(calc(var(--ep-w,380px) + 24px),calc((100vw - 740px)/2));margin-right:auto;max-width:min(740px,calc(100vw - var(--ep-w,380px) - 48px))}}
   @media (max-width:1179px){#ep{width:100%}}
   #ep.inline{position:relative;top:auto;left:auto;bottom:auto;width:100%;height:100%;transform:none;visibility:visible;box-shadow:none;background:transparent;transition:none}
   #ep.inline .hd,#ep.inline .ctx{display:none}#ep.inline .msgs{padding:24px 4px}#ep.inline form{margin:0 0 16px}
   #ep .hd{display:flex;align-items:center;gap:6px;padding:10px 12px 6px}
-  #ep .seg{position:relative;display:flex;padding:2px;border-radius:10px;background:var(--seg)}
-  #ep .seg button{position:relative;z-index:1;height:28px;padding:0 12px;border:0;background:none;border-radius:8px;font:inherit;font-size:13px;color:var(--mute);cursor:pointer}
-  #ep .seg button:hover{color:var(--fg)}#ep .seg button.on{color:var(--fg);font-weight:550}
-  #ep .seg i{position:absolute;top:2px;bottom:2px;left:0;border-radius:8px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 .5px var(--hover2);transition:transform .16s cubic-bezier(.2,0,0,1),width .16s cubic-bezier(.2,0,0,1)}
-  #ep .ic{margin-left:auto;width:28px;height:28px;border:0;background:none;border-radius:8px;color:var(--mute);cursor:pointer;display:grid;place-items:center}
+  #ep .hd .ttl{flex:1;min-width:0;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #ep .ic{width:28px;height:28px;border:0;background:none;border-radius:8px;color:var(--mute);cursor:pointer;display:grid;place-items:center}
   #ep .ic:hover{background:var(--hover);color:var(--fg)}
-  #ep .ctx{padding:0 16px 8px;color:var(--mute);font-size:12px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 0 var(--line)}
+  #ep .ctx{display:none;padding:0 16px 8px;color:var(--mute);font-size:12px;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 1px 0 var(--line)}
   #ep .plan{display:none;padding:8px 16px;font-size:12px;line-height:18px;box-shadow:0 1px 0 var(--line);color:var(--mute)}
   #ep .plan.show{display:block}#ep .plan ol{margin:0;padding-left:18px}#ep .plan li.cur{color:var(--fg);font-weight:550}#ep .plan li.done{text-decoration:line-through}
   #ep .msgs{flex:1;overflow-y:auto;padding:16px;overscroll-behavior:contain}
@@ -33,17 +35,23 @@
   .ep-think{display:inline-block;color:transparent;background:linear-gradient(90deg,var(--mute) 0%,var(--fg) 50%,var(--mute) 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;animation:ep-sh 1.6s linear infinite}
   @keyframes ep-sh{from{background-position:100% 0}to{background-position:0 0}}
   @media (prefers-reduced-motion:reduce){#ep,#ep .m.new{transition:none;animation:none}.ep-think{animation:none;color:var(--mute)}}
-  #ep .card{margin-top:10px;border-radius:12px;padding:12px;background:var(--card);box-shadow:0 0 0 1px var(--line)}
-  #ep .card .qq{font-weight:550;margin-bottom:8px}
-  #ep .card .op{display:block;width:100%;text-align:left;font:inherit;font-size:14px;color:var(--fg);background:var(--surface);border:0;border-radius:8px;box-shadow:0 0 0 1px var(--line);padding:7px 10px;margin:6px 0;cursor:pointer}
-  #ep .card .op:hover{box-shadow:0 0 0 1px var(--line2)}#ep .card .op.on{box-shadow:0 0 0 1.5px var(--fg)}
-  #ep .card .op.idk{color:var(--mute)}
-  #ep .card .lbl{display:flex;justify-content:space-between;color:var(--mute);font-size:12px;margin:10px 0 4px}
-  #ep .card input[type=range]{width:100%;accent-color:var(--fg)}
-  #ep .card textarea{width:100%;min-height:52px;border:0;border-radius:8px;box-shadow:0 0 0 1px var(--line);padding:7px 10px;font:inherit;font-size:14px;resize:vertical;background:var(--surface);color:var(--fg);margin-top:4px}
+  #ep .card{margin-top:12px;border-radius:14px;padding:14px;background:var(--card);box-shadow:0 0 0 1px var(--line)}
+  #ep .card .qq{font-weight:550;margin-bottom:10px}
+  #ep .card .op{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;font:inherit;font-size:14px;color:var(--fg);background:var(--surface);border:0;border-radius:10px;box-shadow:0 0 0 1px var(--line);padding:9px 10px;margin:7px 0;cursor:pointer;transition:box-shadow .08s,background .12s,transform .08s}
+  #ep .card .op:hover:not(:disabled){box-shadow:0 0 0 1px var(--acc)}#ep .card .op:active:not(:disabled){transform:scale(.99)}
+  #ep .card .op .k{flex:none;width:22px;height:22px;border-radius:11px;display:grid;place-items:center;font-size:12px;font-weight:600;background:color-mix(in oklab,var(--acc),var(--bg) 82%);color:var(--acc);transition:background .12s,color .12s}
+  #ep .card .op:disabled{cursor:default}
+  #ep .card .op.right{background:var(--ok-bg);box-shadow:0 0 0 1.5px var(--ok)}#ep .card .op.right .k{background:var(--ok);color:var(--bg)}
+  #ep .card .op.wrong{background:var(--bad-bg);box-shadow:0 0 0 1.5px var(--bad)}#ep .card .op.wrong .k{background:var(--bad);color:var(--bg)}
+  #ep .card .op.dim{opacity:.55}
+  #ep .card .conf{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin:2px 0 4px;font-size:12px;color:var(--mute)}
+  #ep .card .conf button{height:24px;padding:0 9px;border:0;border-radius:12px;background:var(--hover);color:var(--mute);font:inherit;font-size:12px;cursor:pointer}
+  #ep .card .conf button.on{background:var(--fg);color:var(--on-fg)}
+  #ep .card .res{margin-top:10px;font-size:14px;line-height:1.5;animation:ep-in .2s cubic-bezier(.2,0,0,1)}#ep .card .res b.ok{color:var(--ok)}#ep .card .res b.no{color:var(--bad)}
+  #ep .card details{margin-top:6px;font-size:13px;color:var(--mute)}#ep .card summary{cursor:pointer}
+  #ep .card textarea{width:100%;min-height:52px;border:0;border-radius:8px;box-shadow:0 0 0 1px var(--line);padding:7px 10px;font:inherit;font-size:14px;resize:vertical;background:var(--surface);color:var(--fg);margin-top:6px}
   #ep .card .go{margin-top:10px;height:32px;padding:0 14px;border:0;border-radius:16px;background:var(--fg);color:var(--on-fg);font:inherit;font-size:13px;cursor:pointer}
   #ep .card .go:disabled{opacity:.3;cursor:default}
-  #ep .card.done{opacity:.6;pointer-events:none}
   #ep .sel{margin:0 16px 8px;font-size:12px;line-height:16px;color:var(--mute);display:none;align-items:center;gap:6px}
   #ep .sel span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #ep .sel button{border:0;background:none;color:var(--mute);cursor:pointer}
@@ -51,7 +59,7 @@
   #ep form:hover{box-shadow:0 0 0 1px var(--line2),0 1px 1px rgba(0,0,0,.04)}#ep form:focus-within{box-shadow:0 0 0 1px color-mix(in oklab,var(--fg),transparent 70%),0 1px 1px rgba(0,0,0,.04)}
   #ep form textarea{display:block;width:100%;border:0;outline:0;background:none;color:var(--fg);resize:none;font:inherit;font-size:14px;line-height:20px;padding:10px 12px 2px;max-height:200px}
   #ep form .row{display:flex;align-items:center;gap:0;padding:2px 6px 6px}
-  #ep .pick{height:26px;padding:0 7px;border:0;background:none;border-radius:7px;color:var(--mute);font:inherit;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;transition:background .08s,color .08s}
+  #ep .pick{white-space:nowrap;height:26px;padding:0 7px;border:0;background:none;border-radius:7px;color:var(--mute);font:inherit;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;transition:background .08s,color .08s}
   #ep .pick:hover,#ep .pick.on{background:var(--hover);color:var(--fg)}#ep .pick svg{width:10px;height:10px;opacity:.6}
   #ep .menu{position:absolute;left:6px;bottom:calc(100% + 6px);z-index:3;min-width:200px;background:var(--surface);border-radius:12px;padding:4px;box-shadow:0 0 0 1px var(--hover2),0 10px 28px var(--shadow);animation:ep-pop .12s cubic-bezier(.2,0,0,1);transform-origin:bottom left}
   #ep .menu button{display:flex;width:100%;align-items:baseline;gap:8px;border:0;background:none;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;color:var(--fg);cursor:pointer;text-align:left}
@@ -91,10 +99,11 @@
   const icon = (d) => `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const ep = document.createElement('aside');
   ep.id = 'ep';
-  ep.innerHTML = `<div class="hd"><div class="seg"><i></i><button data-m="ask" class="on">Ask</button><button data-m="tutor">Tutor</button><button data-m="edit">Edit</button></div>
-      <button class="ic" data-act="new" title="New chat" aria-label="New chat">${icon('<path d="M8 3.5v9M3.5 8h9"/>')}</button></div>
+  ep.innerHTML = `<div class="rs" title="Drag to resize"></div><div class="hd"><span class="ttl"></span>
+      <button class="ic" data-act="new" title="New chat" aria-label="New chat">${icon('<path d="M8 3.5v9M3.5 8h9"/>')}</button>
+      <button class="ic" data-act="full" title="Expand" aria-label="Expand">${icon('<path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9"/>')}</button></div>
     <div class="ctx"></div><div class="plan"></div><div class="msgs"></div><div class="sel"><span></span><button type="button" aria-label="Clear">✕</button></div>
-    <form><textarea rows="1" placeholder="Ask about this lecture"></textarea><div class="row"><button type="button" class="pick" data-k="model"></button><button type="button" class="pick" data-k="effort"></button><button class="send" aria-label="Send" disabled>${icon('<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>')}</button></div></form>`;
+    <form><textarea rows="1" placeholder="Ask about this lecture"></textarea><div class="row"><button type="button" class="pick" data-k="mode"></button><button type="button" class="pick" data-k="model"></button><button type="button" class="pick" data-k="effort"></button><button class="send" aria-label="Send" disabled>${icon('<path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/>')}</button></div></form>`;
   const toggle = document.createElement('button');
   toggle.className = 'b'; toggle.title = 'Chat'; toggle.setAttribute('aria-label', 'Chat');
   toggle.innerHTML = icon('<rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M6 2.5v11"/>') + '<span>Chat</span>';
@@ -118,10 +127,12 @@
   const save = () => { for (const k in hist) store.set(course + ':' + k, hist[k].slice(-60)); };
   let mode = HOME ? 'home' : store.get('mode', 'ask'), selection = '', busy = null;
   const CHOICES = {
+    mode: [['ask', 'Ask', 'questions about the lecture'], ['tutor', 'Tutor', 'teaches you step by step'], ['edit', 'Edit', 'changes the guide']],
     model: [['haiku', 'Haiku', 'fastest'], ['sonnet', 'Sonnet', 'balanced'], ['opus', 'Opus', 'deepest']],
     effort: [['low', 'Low', 'quick'], ['medium', 'Medium', 'default'], ['high', 'High', 'thinks more'], ['xhigh', 'Extra high', 'slowest']],
   };
-  const pickVal = { model: store.get('model', 'sonnet'), effort: store.get('effort', 'medium') };
+  const pickVal = { mode, model: store.get('model', 'sonnet'), effort: store.get('effort', 'medium') };
+  if (HOME) ep.querySelector('.pick[data-k=mode]').remove();
   const caret = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4 5 6.5 7.5 4"/></svg>';
   let menu = null;
   const closeMenu = () => { menu?.remove(); menu = null; ep.querySelectorAll('.pick').forEach((b) => b.classList.remove('on')); };
@@ -129,6 +140,7 @@
     ep.querySelectorAll('.pick').forEach((b) => {
       const k = b.dataset.k, c = CHOICES[k].find((x) => x[0] === pickVal[k]) || CHOICES[k][1];
       b.innerHTML = (k === 'effort' ? c[1] + ' effort' : c[1]) + caret;
+      if (k === 'mode') b.style.color = 'var(--fg)';
     });
   }
   ep.querySelectorAll('.pick').forEach((b) => (b.onclick = (e) => {
@@ -138,7 +150,7 @@
     menu = document.createElement('div'); menu.className = 'menu'; menu.dataset.k = k;
     menu.style.left = b.offsetLeft + 'px';
     menu.innerHTML = CHOICES[k].map(([v, l, d]) => `<button type="button" data-v="${v}" class="${v === pickVal[k] ? 'on' : ''}">${l}<small>${d}</small></button>`).join('');
-    menu.querySelectorAll('button').forEach((x) => (x.onclick = () => { pickVal[k] = x.dataset.v; store.set(k, x.dataset.v); paintPicks(); closeMenu(); ta.focus(); }));
+    menu.querySelectorAll('button').forEach((x) => (x.onclick = () => { pickVal[k] = x.dataset.v; if (k === 'mode') setMode(x.dataset.v); else store.set(k, x.dataset.v); paintPicks(); closeMenu(); ta.focus(); }));
     $('form').append(menu); b.classList.add('on');
   }));
   document.addEventListener('click', (e) => { if (menu && !menu.contains(e.target)) closeMenu(); });
@@ -148,33 +160,36 @@
   const open = (v) => {
     document.body.classList.toggle('ep-on', v); toggle.classList.toggle('on', v);
     if (innerWidth >= 1180) store.set('open', v);
-    if (v) requestAnimationFrame(pill);
   };
   if (!HOME) open(innerWidth >= 1180 && store.get('open', true));
   toggle.onclick = () => open(!document.body.classList.contains('ep-on'));
 
-  function pill() {
-    const on = $('.seg button.on'), i = $('.seg i');
-    if (!on) return;
-    i.style.width = on.offsetWidth + 'px'; i.style.transform = `translateX(${on.offsetLeft}px)`;
-  }
   function currentLec() {
     if (HOME) return null;
     let cur = null;
     for (const s of document.querySelectorAll('section.lec[id^="l"]')) if (getComputedStyle(s).display !== 'none' && s.getBoundingClientRect().top < innerHeight * 0.4) cur = s;
     return cur;
   }
-  const showCtx = () => { const s = currentLec(); $('.ctx').textContent = s ? s.querySelector('h2').textContent : 'Scroll to a lecture to ask about it'; };
+  const showCtx = () => { const s = currentLec(); $('.hd .ttl').textContent = s ? s.querySelector('h2').textContent : (HOME ? '' : 'Contents'); };
   addEventListener('scroll', showCtx, { passive: true }); showCtx();
 
   const box = $('.msgs');
   function setMode(m) {
     mode = m; if (!HOME) store.set('mode', m);
-    ep.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
+    pickVal.mode = m; paintPicks?.();
     $('form textarea').placeholder = { ask: 'Ask about this lecture', tutor: 'Answer, or type "start"', edit: 'What should change in the guide?', home: 'Create a workspace, add a lecture from Granola, ask anything…' }[m];
-    pill(); renderAll();
+    renderAll();
   }
-  ep.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => setMode(b.dataset.m)));
+  // Resize by dragging the right edge; expand to full width with the header button.
+  const setW = (w) => document.documentElement.style.setProperty('--ep-w', Math.round(Math.max(300, Math.min(w, innerWidth * 0.7))) + 'px');
+  setW(store.get('width', 380));
+  $('.rs').onpointerdown = (e) => {
+    e.preventDefault(); document.body.classList.add('ep-drag');
+    const move = (ev) => setW(ev.clientX);
+    const up = () => { document.body.classList.remove('ep-drag'); removeEventListener('pointermove', move); store.set('width', parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ep-w'))); };
+    addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
+  };
+  $('[data-act="full"]').onclick = () => document.body.classList.toggle('ep-full');
   $('[data-act="new"]').onclick = () => { if (busy) busy.abort(); hist[mode] = []; save(); renderAll(); };
 
   function renderPlan() {
@@ -191,7 +206,7 @@
       : `<details class="tools"><summary>Used ${tools.length} step${tools.length > 1 ? 's' : ''} ›</summary>${tools.map((t) => `<div>${esc(t)}</div>`).join('')}</details>`;
     html += p.text.trim() ? md(p.text) : live ? '<span class="ep-think">' + (tools.length ? 'Working…' : 'Thinking…') + '</span>' : '';
     node.innerHTML = html;
-    if (p.quiz && !live) node.append(card(p.quiz, msg));
+    if (p.quiz) node.append(cardFor(p.quiz, msg));
     if (msg.rebuilt && !live && !HOME) {
       const b = Object.assign(document.createElement('button'), { className: 'reload', textContent: HOME ? 'Refresh workspaces' : 'Reload the guide' });
       b.onclick = () => location.reload(); node.append(b);
@@ -218,35 +233,54 @@
     box.scrollTop = box.scrollHeight;
   }
 
+  const cards = new WeakMap();
+  const cardFor = (q, msg) => { if (!cards.has(msg)) cards.set(msg, card(q, msg)); return cards.get(msg); };
+  const CONF = [['Guess', 25], ['Unsure', 50], ['Fairly sure', 75], ['Certain', 95]];
+  // A tutor question. Multiple choice carries its answer and explanation: the pick is marked right or wrong at once,
+  // then the answer (with confidence and optional reasoning) goes back to the tutor.
   function card(q, msg) {
     const c = document.createElement('div');
-    c.className = 'card' + (msg.answered ? ' done' : '');
+    c.className = 'card';
     const hasOpts = Array.isArray(q.options) && q.options.length;
-    let pick = null;
-    c.innerHTML = `<div class="qq">${inline(q.q || '')}</div>` +
-      (hasOpts ? q.options.map((o, i) => `<button class="op" data-i="${i}">${String.fromCharCode(65 + i)}. ${inline(o)}</button>`).join('') + '<button class="op idk" data-i="-1">I don\'t know</button>'
-        : '<textarea class="ans" placeholder="Your answer"></textarea>') +
-      `<div class="conf"><div class="lbl"><span>How sure are you?</span><b>50%</b></div><input type="range" min="0" max="5" step="1" value="2"></div>
-       <textarea class="why" placeholder="Your reasoning (optional)"></textarea><button class="go" disabled>Answer</button>`;
-    const stops = [0, 30, 50, 70, 90, 100];
-    const go = c.querySelector('.go'), range = c.querySelector('input'), conf = c.querySelector('.conf');
-    const ready = () => { go.disabled = hasOpts ? pick === null : !c.querySelector('.ans').value.trim(); };
-    range.oninput = () => { c.querySelector('.lbl b').textContent = stops[range.value] + '%'; };
+    const key = (i) => String.fromCharCode(65 + i);
+    c.innerHTML = `<div class="qq">${inline(q.q || '')}</div>
+      <div class="conf"><span>How sure?</span>${CONF.map(([l], i) => `<button type="button" data-c="${i}">${l}</button>`).join('')}</div>` +
+      (hasOpts ? q.options.map((o, i) => `<button class="op" data-i="${i}"><span class="k">${key(i)}</span><span>${inline(o)}</span></button>`).join('')
+        + `<button class="op idk" data-i="-1"><span class="k">?</span><span>I don't know</span></button>`
+        : '<textarea class="ans" placeholder="Your answer"></textarea><button class="go" disabled>Answer</button>') +
+      '<details><summary>Add your reasoning</summary><textarea class="why" placeholder="How did you think about it? (optional)"></textarea></details><div class="res"></div>';
+    let conf = msg.conf ?? null;
+    const paintConf = () => c.querySelectorAll('.conf button').forEach((b) => b.classList.toggle('on', Number(b.dataset.c) === conf));
+    c.querySelectorAll('.conf button').forEach((b) => (b.onclick = () => { if (msg.answered) return; conf = Number(b.dataset.c); paintConf(); }));
+    const why = () => c.querySelector('.why').value.trim();
+    function mark(pick) {
+      const has = Number.isInteger(q.answer);
+      c.querySelectorAll('.op').forEach((b) => {
+        const i = Number(b.dataset.i); b.disabled = true;
+        if (has && i === q.answer) { b.classList.add('right'); b.querySelector('.k').textContent = '✓'; }
+        else if (i === pick) { b.classList.add(has ? 'wrong' : 'right'); b.querySelector('.k').textContent = has ? '✗' : '•'; }
+        else b.classList.add('dim');
+      });
+      const ok = has && pick === q.answer;
+      c.querySelector('.res').innerHTML = (has ? `<b class="${ok ? 'ok' : 'no'}">${ok ? 'Correct.' : pick === -1 ? 'The answer is ' + key(q.answer) + '.' : 'Not quite.'}</b> ` : '') + (q.why ? inline(q.why) : '');
+      return ok;
+    }
+    function submit(answer, extra) {
+      const lines = [`Answer: ${answer}${extra || ''}`];
+      if (conf !== null) lines.push(`Confidence: ${CONF[conf][1]}%`);
+      if (why()) lines.push(`Reasoning: ${why()}`);
+      msg.answered = true; msg.conf = conf; save();
+      setTimeout(() => send(lines.join('\n')), 700);
+    }
     c.querySelectorAll('.op').forEach((b) => (b.onclick = () => {
-      pick = Number(b.dataset.i);
-      c.querySelectorAll('.op').forEach((x) => x.classList.toggle('on', x === b));
-      conf.style.display = pick === -1 ? 'none' : ''; ready();
+      if (msg.answered || busy) return;
+      const pick = Number(b.dataset.i); msg.pick = pick;
+      const ok = mark(pick), has = Number.isInteger(q.answer);
+      submit(pick === -1 ? "I don't know" : `${key(pick)}. ${q.options[pick]}`, has && pick !== -1 ? (ok ? ' (correct)' : ` (wrong; the right answer is ${key(q.answer)})`) : '');
     }));
-    c.querySelector('.ans')?.addEventListener('input', ready);
-    go.onclick = () => {
-      const answer = hasOpts ? (pick === -1 ? "I don't know" : `${String.fromCharCode(65 + pick)}. ${q.options[pick]}`) : c.querySelector('.ans').value.trim();
-      const why = c.querySelector('.why').value.trim();
-      const lines = [`Answer: ${answer}`];
-      if (pick !== -1) lines.push(`Confidence: ${stops[range.value]}%`);
-      if (why) lines.push(`Reasoning: ${why}`);
-      msg.answered = true; c.classList.add('done');
-      send(lines.join('\n'));
-    };
+    const ans = c.querySelector('.ans'), go = c.querySelector('.go');
+    if (ans) { ans.oninput = () => { go.disabled = !ans.value.trim(); }; go.onclick = () => { if (msg.answered || busy) return; go.disabled = true; ans.disabled = true; submit(ans.value.trim()); }; }
+    if (msg.answered) { paintConf(); if (hasOpts && msg.pick !== undefined) mark(msg.pick); c.querySelectorAll('textarea,.go').forEach((x) => { x.disabled = true; }); }
     return c;
   }
 

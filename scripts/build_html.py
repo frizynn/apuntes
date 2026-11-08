@@ -25,6 +25,10 @@ nav.bar .t{flex:1;min-width:0;padding:0 6px;font-weight:550;font-size:14px;color
 nav.bar .b{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--mute);font:inherit;font-size:13px;text-decoration:none;cursor:pointer;white-space:nowrap;transition:background .08s,color .08s}
 nav.bar .b:hover{background:var(--hover);color:var(--fg)}nav.bar .b.on{background:var(--hover2);color:var(--fg)}
 nav.bar svg{width:16px;height:16px;flex:none}
+main>*,#exam>*,#ep .msgs>*,#ep form{zoom:var(--z,1)}
+.fmenu{position:fixed;z-index:20;top:44px;padding:4px;border-radius:12px;background:var(--surface);box-shadow:0 0 0 1px var(--hover2),0 10px 28px var(--shadow);display:flex;gap:2px}
+.fmenu button{width:40px;height:36px;border:0;border-radius:8px;background:none;color:var(--mute);font-family:inherit;cursor:pointer;line-height:1}
+.fmenu button:hover{background:var(--hover);color:var(--fg)}.fmenu button.on{background:var(--hover2);color:var(--fg);font-weight:600}
 @media (max-width:520px){nav.bar .b span{display:none}nav.bar .b{padding:0 8px}}
 h1{font-size:28px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
 h2{font-size:23px;font-weight:600;margin:0 0 8px;letter-spacing:-.01em}
@@ -191,9 +195,9 @@ page = f"""<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(cfg['title'])}</title>
 <style>{CSS}</style>
-<script>try{{const t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}}catch(e){{}}</script></head>
+<script>try{{const t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;const z=localStorage.getItem('zoom');if(z)document.documentElement.style.setProperty('--z',z)}}catch(e){{}}</script></head>
 <body>
-<nav class="bar"><span id="barl"></span><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#exam"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="viewbtn" aria-label="Page by page or one long page" title="Page by page or one long page"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="2.5" width="10" height="11" rx="1.5"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" stroke-linecap="round"/></svg></button><button class="b" id="themebtn" aria-label="Theme" title="Light or dark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg></button><button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
+<nav class="bar"><span id="barl"></span><a class="t" href="#top">{html.escape(cfg['title'])}</a>{f'<a class="b" href="#exam"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2.5h10v11H3zM5.5 6l1.5 1.5L10 4.5M5.5 10.5h5"/></svg><span>{UI[5]}</span></a>' if practice else ""}<button class="b" id="fontbtn" aria-label="Text size" title="Text size"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5 5.5 3.5 9 12.5M3.3 9.5h4.4M10.5 12.5l2.2-6 2.2 6M11.2 10.8h3"/></svg></button><button class="b" id="viewbtn" aria-label="Page by page or one long page" title="Page by page or one long page"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="2.5" width="10" height="11" rx="1.5"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3" stroke-linecap="round"/></svg></button><button class="b" id="themebtn" aria-label="Theme" title="Light or dark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg></button><button class="b" id="tocbtn" aria-label="{UI[2]}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg><span>{UI[2]}</span></button></nav>
 <main id="top"><div id="overview">
 <h1>{html.escape(cfg['title'])}</h1>
 <p class="lead">{UI[1].format(n=len(files), d=date.today().strftime('%d/%m/%Y'))}</p>
@@ -208,6 +212,14 @@ page = f"""<!doctype html>
 <a class="top" href="#top">{UI[3]}</a>
 <script>
 const links=[...document.querySelectorAll('aside.side a')];
+const fb=document.getElementById('fontbtn'),ZS=[.9,1,1.12,1.25,1.4];let fm=null;
+fb.onclick=(e)=>{{e.stopPropagation();if(fm){{fm.remove();fm=null;return;}}
+  const cur=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--z'))||1;
+  fm=document.createElement('div');fm.className='fmenu';const r=fb.getBoundingClientRect();fm.style.right=(innerWidth-r.right)+'px';
+  fm.innerHTML=ZS.map(z=>`<button data-z="${{z}}" class="${{z===cur?'on':''}}" style="font-size:${{Math.round(12*z)}}px">A</button>`).join('');
+  fm.querySelectorAll('button').forEach(b=>b.onclick=()=>{{document.documentElement.style.setProperty('--z',b.dataset.z);try{{localStorage.setItem('zoom',b.dataset.z)}}catch(e){{}}fm.remove();fm=null;}});
+  document.body.append(fm);}};
+document.addEventListener('click',e=>{{if(fm&&!fm.contains(e.target)){{fm.remove();fm=null;}}}});
 const thb=document.getElementById('themebtn');
 thb.onclick=()=>{{const dark=getComputedStyle(document.documentElement).colorScheme==='dark';const t=dark?'light':'dark';document.documentElement.dataset.theme=t;try{{localStorage.setItem('theme',t)}}catch(e){{}}}};
 const tb=document.getElementById('tocbtn'),wide=()=>innerWidth>=1180;
