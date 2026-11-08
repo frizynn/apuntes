@@ -24,6 +24,10 @@
   #ep .m{margin:0 0 16px}#ep .m.new{animation:ep-in .16s cubic-bezier(.2,0,0,1)}
   #ep .m.u{margin-left:auto;max-width:85%;width:fit-content;background:color-mix(in oklab,var(--acc),#fff 88%);border-radius:14px;padding:8px 12px;white-space:pre-wrap}
   #ep .m.e{color:var(--mute)}
+  #ep .tools{margin:0 0 8px;color:var(--mute);font-size:12px;line-height:17px}
+  #ep .tools div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#ep .tools div:before{content:"· "}
+  #ep .tools summary{cursor:pointer;list-style:none}#ep .tools summary::-webkit-details-marker{display:none}
+  #ep .reload{margin-top:10px;height:30px;padding:0 14px;border:0;border-radius:15px;background:var(--fg);color:#fff;font:inherit;font-size:13px;cursor:pointer}
   #ep .m p{margin:0}#ep .m p+p,#ep .m p+ul,#ep .m ul+p{margin-top:8px}#ep .m ul{margin:6px 0 0;padding-left:18px}#ep .m li{margin:2px 0}
   @keyframes ep-in{from{opacity:0;transform:translateY(6px)}}
   .ep-think{display:inline-block;color:transparent;background:linear-gradient(90deg,#9a9996 0%,#1f1e1d 50%,#9a9996 100%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;animation:ep-sh 1.6s linear infinite}
@@ -79,7 +83,7 @@
   const icon = (d) => `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
   const ep = document.createElement('aside');
   ep.id = 'ep';
-  ep.innerHTML = `<div class="hd"><div class="seg"><i></i><button data-m="ask" class="on">Ask</button><button data-m="tutor">Tutor</button></div>
+  ep.innerHTML = `<div class="hd"><div class="seg"><i></i><button data-m="ask" class="on">Ask</button><button data-m="tutor">Tutor</button><button data-m="edit">Edit</button></div>
       <button class="ic" data-act="new" title="New chat" aria-label="New chat">${icon('<path d="M8 3.5v9M3.5 8h9"/>')}</button></div>
     <div class="opts"><select data-k="model" aria-label="Model"><option value="haiku">Haiku</option><option value="sonnet">Sonnet</option><option value="opus">Opus</option></select>
       <select data-k="effort" aria-label="Effort"><option value="low">Low effort</option><option value="medium">Medium effort</option><option value="high">High effort</option><option value="xhigh">Extra high effort</option></select></div>
@@ -98,8 +102,8 @@
     set(k, v) { try { localStorage.setItem('ep:' + k, JSON.stringify(v)); } catch { /* storage blocked */ } },
   };
   const course = location.pathname;
-  const hist = { ask: store.get(course + ':ask', []), tutor: store.get(course + ':tutor', []) };
-  const save = () => { store.set(course + ':ask', hist.ask.slice(-40)); store.set(course + ':tutor', hist.tutor.slice(-60)); };
+  const hist = { ask: store.get(course + ':ask', []), tutor: store.get(course + ':tutor', []), edit: store.get(course + ':edit', []) };
+  const save = () => { for (const k in hist) store.set(course + ':' + k, hist[k].slice(-60)); };
   let mode = store.get('mode', 'ask'), selection = '', busy = null;
   ep.querySelectorAll('select').forEach((s) => { s.value = store.get(s.dataset.k, s.dataset.k === 'model' ? 'sonnet' : 'medium'); s.onchange = () => store.set(s.dataset.k, s.value); });
 
@@ -127,7 +131,7 @@
   function setMode(m) {
     mode = m; store.set('mode', m);
     ep.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('on', x.dataset.m === m));
-    $('form textarea').placeholder = m === 'ask' ? 'Ask about this lecture' : 'Answer, or type "start"';
+    $('form textarea').placeholder = { ask: 'Ask about this lecture', tutor: 'Answer, or type "start"', edit: 'What should change in the guide?' }[m];
     pill(); renderAll();
   }
   ep.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => setMode(b.dataset.m)));
@@ -141,9 +145,17 @@
       el.innerHTML = '<ol>' + plan.steps.map((s, i) => `<li class="${i < plan.current ? 'done' : i === plan.current ? 'cur' : ''}">${esc(s)}</li>`).join('') + '</ol>';
   }
   function fillAssistant(node, msg, live) {
-    const p = parse(msg.content);
-    node.innerHTML = p.text.trim() ? md(p.text) : live ? '<span class="ep-think">Thinking…</span>' : '';
+    const p = parse(msg.content), tools = msg.tools || [];
+    let html = '';
+    if (tools.length) html = live ? `<div class="tools">${tools.slice(-3).map((t) => `<div>${esc(t)}</div>`).join('')}</div>`
+      : `<details class="tools"><summary>Used ${tools.length} step${tools.length > 1 ? 's' : ''} ›</summary>${tools.map((t) => `<div>${esc(t)}</div>`).join('')}</details>`;
+    html += p.text.trim() ? md(p.text) : live ? '<span class="ep-think">' + (tools.length ? 'Working…' : 'Thinking…') + '</span>' : '';
+    node.innerHTML = html;
     if (p.quiz && !live) node.append(card(p.quiz, msg));
+    if (msg.rebuilt && !live) {
+      const b = Object.assign(document.createElement('button'), { className: 'reload', textContent: 'Reload the guide' });
+      b.onclick = () => location.reload(); node.append(b);
+    }
   }
   function addNode(msg, animate) {
     const n = document.createElement('div');
@@ -155,7 +167,11 @@
   function renderAll() {
     box.innerHTML = '';
     if (!hist[mode].length) {
-      box.innerHTML = `<div class="m e">${mode === 'ask' ? 'Ask anything about the lecture you are reading, or select text in the guide.' : 'The tutor first finds out what you already know, then teaches the topic one step at a time and checks each step with a question. Type "start".'}</div>`;
+      box.innerHTML = `<div class="m e">${{
+        ask: 'Ask anything about the lecture you are reading, or select text in the guide. Claude answers from the guide and digs into the slides, readings and recordings when the guide is thin.',
+        tutor: 'The tutor first finds out what you already know, then teaches the topic one step at a time and checks each step with a question. Type "start".',
+        edit: 'Change the guide itself. For example: "add Lecture 4 from my Granola recording of 12/11", "expand the AMO model with the Bos-Nehles paper", "add more practice for Lecture 2". Claude reads the material, edits the guide and rebuilds it.',
+      }[mode]}</div>`;
     } else hist[mode].forEach((m) => addNode(m, false));
     renderPlan();
     box.scrollTop = box.scrollHeight;
@@ -193,12 +209,23 @@
     return c;
   }
 
-  async function stream(body, onText, signal) {
+  // The server streams newline-delimited JSON events: {t:"text"|"tool"|"rebuilt", d}.
+  async function stream(body, onText, signal, onEvent = () => {}) {
     const r = await fetch(E.api, { method: 'POST', signal, headers: { 'Content-Type': 'application/json', 'X-Estudio-Token': E.token }, body: JSON.stringify(body) });
     if (!r.ok) throw new Error(await r.text());
     const rd = r.body.getReader(), dec = new TextDecoder();
-    let all = '';
-    for (;;) { const { done, value } = await rd.read(); if (done) break; all += dec.decode(value, { stream: true }); onText(all); }
+    let all = '', buf = '';
+    for (;;) {
+      const { done, value } = await rd.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i, changed = false;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const line = buf.slice(0, i); buf = buf.slice(i + 1);
+        let ev; try { ev = JSON.parse(line); } catch { continue; }
+        if (ev.t === 'text') { all += ev.d; changed = true; } else onEvent(ev);
+      }
+      if (changed) onText(all);
+    }
     return all;
   }
   const opts = () => ({ model: $('[data-k=model]').value, effort: $('[data-k=effort]').value });
@@ -226,10 +253,16 @@
     const onScroll = () => setTimeout(() => { stick = box.scrollHeight - box.scrollTop - box.clientHeight < 40; }, 50);
     box.addEventListener('wheel', onScroll, { passive: true }); box.addEventListener('touchmove', onScroll, { passive: true });
     try {
-      await stream({ mode: m, lec: s ? s.id : null, selection: sel, messages: h.slice(0, -1), ...opts() }, (t) => {
+      reply.tools = [];
+      await stream({ mode: m, lec: s ? s.id : null, selection: sel, messages: h.slice(0, -1).map(({ role, content }) => ({ role, content })), ...opts() }, (t) => {
         reply.content = t; fillAssistant(node, reply, true);
         if (stick) box.scrollTop = box.scrollHeight;
-      }, busy.signal);
+      }, busy.signal, (ev) => {
+        if (ev.t === 'tool') reply.tools.push(ev.d);
+        if (ev.t === 'rebuilt') reply.rebuilt = true;
+        fillAssistant(node, reply, true);
+        if (stick) box.scrollTop = box.scrollHeight;
+      });
     } catch (err) { if (err.name !== 'AbortError') reply.content = 'Could not reach Claude: ' + err.message; }
     box.removeEventListener('wheel', onScroll); box.removeEventListener('touchmove', onScroll);
     busy = null; fillAssistant(node, reply, false); renderPlan(); save(); grow();

@@ -5,6 +5,7 @@ Usage: build_html.py <course_dir>   (writes <course_dir>/../<course.json output_
 Needs pandoc. Each lecture's headings shift down one level so the course title is the only h1.
 """
 import base64, html, json, re, subprocess, sys
+from urllib.parse import quote
 from datetime import date
 from pathlib import Path
 
@@ -52,6 +53,7 @@ aside.side a{display:block;color:var(--mute);text-decoration:none;padding:3px 0}
 aside.side .l{font-weight:600;margin-top:10px}aside.side .s{padding-left:10px}
 aside.side .grp:not(.open) .s{display:none}
 aside.side a.on,nav a.on{color:var(--acc)}
+.srcs{margin-top:32px;font-size:14px;color:var(--mute)}.srcs ul{padding-left:18px}.srcs a{color:var(--fg)}
 .practice{margin-top:40px;border-top:1px dashed var(--line);padding-top:8px}
 .q{background:var(--soft);border-radius:12px;padding:14px 16px;margin:14px 0}
 .q .qt{margin:0 0 10px;font-weight:500}
@@ -89,6 +91,32 @@ UI = {"es": ("Inicio", "Guía de estudio: {n} clases, actualizada el {d}.", "Ín
              "What the answer needs", "Model answer", "New mock exam", "Correct",
              "Mixed questions from every lecture, like the exam. Each click draws new ones.")}[cfg.get("ui_language", "en")]
 practice = {}
+out_dir = course.parent
+
+
+def find(name):
+    hits = sorted(p for p in out_dir.rglob(name) if course not in p.parents)
+    return hits[0] if hits else None
+
+
+def sources_html(lec):
+    """List the material a lecture was written from, linked when it is a local file or a URL."""
+    items = []
+    for label, names in (("Slides", [lec.get("slides")]), ("Reading", lec.get("readers", []))):
+        for n in filter(None, names):
+            f = find(n)
+            href = "/".join(quote(x) for x in f.relative_to(out_dir).parts) if f else None
+            items.append(f'{label}: <a href="{href}" target="_blank">{html.escape(n)}</a>' if href else f"{label}: {html.escape(n)} (not in the folder)")
+    if lec.get("paper"):
+        items.append("Paper: " + html.escape(lec["paper"]))
+    for g in lec.get("granola", []):
+        items.append(f'Recording: <a href="https://notes.granola.ai/d/{quote(g)}" target="_blank">Granola</a>')
+    for clip in lec.get("clips", []):
+        m = re.search(r"https?://\S+", clip)
+        items.append("Clip: " + (f'<a href="{html.escape(m.group(0))}" target="_blank">{html.escape(clip[:m.start()].strip() or m.group(0))}</a>' if m else html.escape(clip)))
+    if lec.get("chapters") and cfg.get("book"):
+        items.append("Book: " + html.escape(cfg["book"].get("name", "")) + ", ch. " + ", ".join(map(str, lec["chapters"])))
+    return items
 sections, toc, side = [], [], []
 for f in files:
     key = f.stem.lower()
@@ -103,6 +131,11 @@ for f in files:
     when = " · ".join(x for x in [lec.get("kind", ""), lec.get("date", "")] if x)
 
     heads = re.findall(r'<h3 id="([^"]+)"[^>]*>(.*?)</h3>', frag, re.S)
+    srcs = sources_html(lec)
+    if srcs:
+        sid = f"{key}-sources"
+        frag += f'<div class="srcs"><h3 id="{sid}">Sources</h3><ul>' + "".join(f"<li>{x}</li>" for x in srcs) + "</ul></div>"
+        heads.append((sid, "Sources"))
     pf = course / "practice" / f"{f.stem}.json"
     if pf.exists():
         ids = {html.unescape(re.sub(r"<[^>]+>", "", t)).strip(): i for i, t in heads}
