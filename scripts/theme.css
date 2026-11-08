@@ -8,7 +8,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--d-bg:#323230;--d-panel:#393937;--d-box:#3f3f3c;--d-stroke:#8d8a83;--d-text:#b4b1aa;--d-strong:#e4e1da;--d-acc:#d98b6c;--d-acc-fill:#5a4238;--d-bad:#e08a7e;--d-bad-fill:#4d3532;--d-good:#86c29c;--d-good-fill:#344a3c}}
 /* Diagram shapes and text, by class. */
 figure.dg{margin:24px 0;padding:18px;border-radius:16px;background:var(--d-bg)}
-figure.dg svg{display:block;width:100%;height:auto;max-height:560px;font-family:inherit}
+figure.dg svg{display:block;width:100%;height:auto;max-height:820px;font-family:inherit}
 figure.dg figcaption{margin-top:10px}
 .dg .panel{fill:var(--d-panel);stroke:none}.dg .box{fill:var(--d-box);stroke:var(--d-stroke);stroke-width:1.5}
 .dg .acc-box{fill:var(--d-box);stroke:var(--d-acc);stroke-width:1.5}.dg .acc-fill{fill:var(--d-acc-fill);stroke:var(--d-acc);stroke-width:1.5}
